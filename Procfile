@@ -1,0 +1,1 @@
+web: gunicorn lmblife.wsgi --log-file -
