@@ -29,7 +29,7 @@ def create_update_university(request, pk=None):
             form = UniversityForm(request.POST)
             if not form.is_valid():
                 return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
-            University.universities.create_university(**form.cleaned_data)
+            University.create(**form.cleaned_data)
         else:
             university = get_object_or_404(University, pk=pk)
             form = UniversityForm(request.POST, instance=university)

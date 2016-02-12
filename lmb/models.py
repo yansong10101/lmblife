@@ -24,10 +24,6 @@ class University(models.Model):
     objects = models.Manager()
     universities = UniversityManager()
 
-    def create(self, **kwargs):
-        university = self.universities.create(**kwargs)
-        return university
-
     def __str__(self):
         return self.university_name
 
@@ -36,6 +32,18 @@ class University(models.Model):
 
     def has_relationship(self):
         return self.is_active
+
+    @classmethod
+    def create(cls, **kwargs):
+        # TODO :
+        """
+            create new university:
+            1. create a super user (president)
+            2. grant all permissions to president
+            3. can create group ?
+        """
+        university = cls.universities.create(**kwargs)
+        return university
 
 
 class FeatureGroup(models.Model):
@@ -48,12 +56,13 @@ class FeatureGroup(models.Model):
     objects = models.Manager()
     feature_groups = FeatureGroupManager()
 
-    def create(self, **kwargs):
-        feature_group = self.feature_groups.create(**kwargs)
-        return feature_group
-
     def __str__(self):
         return self.feature_name
+
+    @classmethod
+    def create(cls, **kwargs):
+        feature_group = cls.feature_groups.create(**kwargs)
+        return feature_group
 
 
 class Feature(models.Model):
@@ -67,19 +76,24 @@ class Feature(models.Model):
     objects = models.Manager()
     features = FeatureManager()
 
-    def create_feature(self, **kwargs):
-        feature = self.features.create(**kwargs)
+    def __str__(self):
+        return self.feature_name
+
+    @classmethod
+    def create_feature(cls, **kwargs):
+        """
+            create new feature:
+            1. add to permission
+        """
+        feature = cls.features.create(**kwargs)
         # create corresponding permissions based on feature
         Permission.permissions.create_permission(feature)
         return feature
 
-    def __str__(self):
-        return self.feature_name
-
 
 class Permission(models.Model):
     """
-        Only do insertion when create new features and feature groups
+        Only do insertion when create new features
     """
 
     PERMISSION_TYPE = (
@@ -95,18 +109,18 @@ class Permission(models.Model):
     objects = models.Manager()
     permissions = PermissionManager()
 
-    def create(self, feature, **kwargs):
-        return self.permissions.create_permission(feature, **kwargs)
-
     def __str__(self):
         return self.permission_name
+
+    @classmethod
+    def create(cls, feature, **kwargs):
+        return cls.permissions.create_permission(feature, **kwargs)
 
 
 class PermissionGroup(models.Model):
     """
         insert rows:
-        1. new feature added
-        2. org president grant sub admin users
+        1. org president grant sub admin users
     """
     USER_LEVEL = (
         (0, '游客'),
@@ -129,13 +143,20 @@ class PermissionGroup(models.Model):
     is_org_admin = models.BooleanField(default=True)
     is_super_user = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    user_level = models.IntegerField(default=0)
+    user_level = models.IntegerField(choices=USER_LEVEL, default=0)
 
     objects = models.Manager()
     permission_groups = PermissionGroupManager()
 
-    def create(self, permission_list=None, **kwargs):
-        permission_group = self.permission_groups.create(**kwargs)
+    def __str__(self):
+        return self.group_name
+
+    def __unicode__(self):
+        return self.__str__()
+
+    @classmethod
+    def create(cls, permission_list=None, **kwargs):
+        permission_group = cls.permission_groups.create(**kwargs)
         if permission_list:
             for permission_id in permission_list:
                 permission = Permission.permissions.get(pk=permission_id)
@@ -157,12 +178,6 @@ class PermissionGroup(models.Model):
             if not permission_group.permission.filter(pk=permission_id).exists():
                 permission = get_object_or_404(Permission, pk=permission_id)
                 permission_group.permission.add(permission)
-
-    def __str__(self):
-        return self.group_name
-
-    def __unicode__(self):
-        return self.__str__()
 
 
 class OrgAdmin(AbstractBaseUser):
@@ -258,14 +273,15 @@ class Customer(AbstractBaseUser):
 
 class CustomerUPG(models.Model):
     """
-    CustomerUPG == Customer University Permission Group
+        CustomerUPG == Customer University Permission Group
+        Keep records for customer permission group in university
     """
     customer = models.ForeignKey(Customer, related_name='customer_upg_customer')
     university = models.ForeignKey(University, related_name='customer_upg_university')
     permission_group = models.ForeignKey(PermissionGroup, related_name='customer_upg_permission_group')
     grant_level = models.IntegerField(default=0, verbose_name='grant user level')
+    approval_comment = models.TextField(blank=True)
 
-    # db_table = 'customer_university_permission'
     objects = models.Manager()
     customer_upg = CustomerUPGManager()
 
@@ -274,7 +290,7 @@ class CustomerUPG(models.Model):
 
     @classmethod
     def create_customer_upg(cls, **kwargs):
-        customer_upg = CustomerUPG(**kwargs)
+        customer_upg = cls(**kwargs)
         customer_upg.grant_level = customer_upg.permission_group.user_level
         customer_upg.save()
         return customer_upg

@@ -1,6 +1,5 @@
 from .models import University, OrgAdmin, Customer, CustomerUPG, FeatureGroup, Feature, PermissionGroup
 from django import forms
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
 
 USER_BACKEND = 'django.contrib.auth.backends.ModelBackend'
@@ -36,17 +35,6 @@ class CustomerCreationForm(forms.ModelForm):
         return user
 
 
-# class CustomerChangeForm(forms.ModelForm):
-#     password = ReadOnlyPasswordHashField()
-#
-#     class Meta:
-#         model = Customer
-#         fields = ('email', 'password', 'is_active', 'first_name', 'last_name', )
-#
-#     def clean_password(self):
-#         return self.initial['password']
-
-
 class OrgAdminCreateForm(forms.ModelForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput)
@@ -74,7 +62,7 @@ class CustomerUPGForm(forms.ModelForm):
 
     class Meta:
         model = CustomerUPG
-        fields = ('customer', 'university', 'permission_group', )
+        fields = ('customer', 'university', 'permission_group', 'approval_comment', )
 
     def validate_existing(self):
         customer = self.cleaned_data.get('customer')

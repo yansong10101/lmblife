@@ -3,33 +3,18 @@ from django.contrib.auth.models import BaseUserManager
 
 
 class UniversityManager(models.Manager):
-    """
-        create new university:
-        1. with all default features (recommend only toggle existing features)
-        2. create a super user (president)
-        3. grant all permissions to president
-        4. can create group
-    """
 
     def get_queryset(self, is_active=True):
         return super(UniversityManager, self).get_queryset().filter(is_active=is_active)
 
 
 class FeatureGroupManager(models.Manager):
-    """
-        create new feature group:
-        1. add to administration permission model
-    """
 
     def get_queryset(self, is_active=True, **kwargs):
         return super(FeatureGroupManager, self).get_queryset().filter(is_active=is_active, **kwargs)
 
 
 class FeatureManager(models.Manager):
-    """
-        create new feature:
-        1. add to administration permission model
-    """
 
     def get_queryset(self, is_active=True):
         return super(FeatureManager, self).get_queryset().filter(is_active=is_active)
