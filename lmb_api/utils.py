@@ -1,7 +1,8 @@
 import binascii
 import os
-from lmb_api.restful.lmb_api import *
-from lmb_content.lmb_cache import LMBCache
+# from lmb_api.restful.lmb_api import *
+from lmb_content import Cache
+from lmb import OrgAdmin, Customer, CustomerUPG
 
 
 def generate_key():
@@ -49,7 +50,7 @@ def _get_user_permissions(user):
 
 
 def get_or_create_cache_token(token, user_dict):
-    user_cache = LMBCache()
+    user_cache = Cache()
     if user_cache.is_exists(token):
         cached_data = user_cache.get(token)
         if cached_data['user_id'] == user_dict['user_id'] and cached_data['role'] == user_dict['role']:
@@ -62,6 +63,18 @@ def get_or_create_cache_token(token, user_dict):
     return token
 
 
+def update_admin_permission_group(user, permission_groups):
+    if isinstance(user, OrgAdmin):
+        origin_group = user.permission_group.all()
+        for group in origin_group:
+            user.permission_group.remove(group)
+        for group in permission_groups:
+            user.permission_group.add(group)
+        user.save()
+        return user
+    return 'ERROR: No rights to edit !'
+
+
 def cache_user(user, token):
     response_data = _get_user_permissions(user)
     response_data['token'] = get_or_create_cache_token(token, response_data)
@@ -69,12 +82,12 @@ def cache_user(user, token):
 
 
 def get_cache(key):
-    lmb_cache = LMBCache()
+    lmb_cache = Cache()
     return lmb_cache.get(key)
 
 
 def is_authenticate_user(token):
-    lmb_cache = LMBCache()
+    lmb_cache = Cache()
     if lmb_cache.is_exists(token):
         return True
     return False

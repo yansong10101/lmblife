@@ -1,6 +1,4 @@
-from lmb_api.serializers.lmb_serializer import *
-from lmb.forms import (UniversityForm, OrgAdminCreateForm, CustomerCreationForm, CustomerUPGForm, FeatureGroupForm,
-                       FeatureForm, PermissionGroupForm)
+from lmb import *
 from rest_framework.decorators import api_view
 from rest_framework import generics
 from rest_framework.response import Response
@@ -23,6 +21,13 @@ class UniversityRetrieve(generics.RetrieveAPIView):
 
 @api_view(['POST', 'PUT', ])
 def create_update_university(request, pk=None):
+    # TODO : If create university
+    """
+        create new university:
+        1. create a super user (president)
+        2. grant all permissions to president
+        3. can create group ?
+    """
     response_data = {}
     if request.method == 'POST' or request.method == 'PUT':
         if pk is None:
@@ -63,18 +68,6 @@ def create_org_admin(request):
         form.save()
         return Response(data=response_data, status=status.HTTP_201_CREATED)
     return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
-def update_admin_permission_group(user, permission_groups):
-    if isinstance(user, OrgAdmin):
-        origin_group = user.permission_group.all()
-        for group in origin_group:
-            user.permission_group.remove(group)
-        for group in permission_groups:
-            user.permission_group.add(group)
-        user.save()
-        return user
-    return 'ERROR: No rights to edit !'
 
 
 # Customer APIs
@@ -122,7 +115,7 @@ def create_update_customer_upg(request):
         if not form.is_valid():
             return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
         if not form.validate_existing():
-            CustomerUPG.customer_upg.create_customer_upg(**form.cleaned_data)
+            CustomerUPG.create_customer_upg(**form.cleaned_data)
         else:
             form.update_customer_university_group()
         return Response(data=response_data, status=status.HTTP_201_CREATED)
@@ -143,14 +136,17 @@ class FeatureGroupDetail(generics.RetrieveAPIView):
 
 @api_view(['POST', 'PUT', ])
 def create_update_feature_group(request, pk=None):
-    # TODO : permission checking
+    """
+        We do not check permission since the feature group is only created by LMB internal team,
+        all university should have the same visibility of all base feature groups.
+    """
     response_data = {}
     if request.method == 'POST' or request.method == 'PUT':
         if pk is None:
             form = FeatureGroupForm(request.POST)
             if not form.is_valid():
                 return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
-            FeatureGroup.feature_groups.create_feature_group(**form.cleaned_data)
+            FeatureGroup.create(**form.cleaned_data)
         elif pk:
             feature_group = get_object_or_404(FeatureGroup, pk=pk)
             form = FeatureGroupForm(request.POST, instance=feature_group)
@@ -181,7 +177,7 @@ def create_update_feature(request, pk=None):
             form = FeatureForm(request.POST)
             if not form.is_valid():
                 return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
-            Feature.features.create_feature(**form.cleaned_data)
+            Feature.create_feature(**form.cleaned_data)
         elif pk:
             feature = get_object_or_404(Feature, pk=pk)
             form = FeatureForm(request.POST, instance=feature)
@@ -202,6 +198,13 @@ class PermissionList(generics.ListAPIView):
 class PermissionRetrieve(generics.RetrieveAPIView):
     queryset = Permission.permissions
     serializer_class = PermissionRetrieveSerializer
+
+
+def create_permission():
+    """
+        We do not allow to create permission via API, until only new feature creation triggered.
+    """
+    pass
 
 
 # Permission Group APIs
@@ -240,7 +243,7 @@ def create_update_permission_group(request, pk=None):
                 PermissionGroup.update(permission_group, permission_list)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
     elif request.method == 'DELETE' and pk:
-        # FIXME : de-active only for now, better to delete with all relations ?
+        # NOTE : de-active only for now, better to delete with all relations ?
         permission_group = get_object_or_404(PermissionGroup, pk=pk)
         permission_group.is_active = False
         permission_group.save()

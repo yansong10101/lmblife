@@ -1,5 +1,7 @@
-from .managers import *
+from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
+from lmb.managers import (UniversityManager, FeatureGroupManager, FeatureManager, PermissionManager,
+                          PermissionGroupManager, OrgAdminManager, CustomerManager, CustomerUPGManager)
 from django.core import validators
 from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import get_object_or_404
@@ -35,13 +37,6 @@ class University(models.Model):
 
     @classmethod
     def create(cls, **kwargs):
-        # TODO :
-        """
-            create new university:
-            1. create a super user (president)
-            2. grant all permissions to president
-            3. can create group ?
-        """
         university = cls.universities.create(**kwargs)
         return university
 
@@ -130,14 +125,7 @@ class PermissionGroup(models.Model):
         (4, '赞助商'),
         (5, '黑名单'),
     )
-    USER_LEVEL_MAP = {
-        0: '游客',
-        1: '在校生',
-        2: '临校生',
-        3: '毕业生',
-        4: '赞助商',
-        5: '黑名单',
-    }
+
     permission = models.ManyToManyField(Permission, related_name='group_permission')
     group_name = models.CharField(max_length=150)
     is_org_admin = models.BooleanField(default=True)

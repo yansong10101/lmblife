@@ -47,6 +47,45 @@ class CustomerRetrieveSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('pk', 'email', 'first_name', 'last_name', 'created_date', 'last_modified_date', )
 
 
+# Permission serializers
+class PermissionListSerializer(serializers.HyperlinkedModelSerializer):
+    detail_url = serializers.HyperlinkedIdentityField(view_name='api:permission-retrieve', read_only=True)
+    feature = serializers.HyperlinkedRelatedField(view_name='api:feature-retrieve', read_only=True)
+
+    class Meta:
+        model = Permission
+        fields = ('pk', 'detail_url', 'feature', 'permission_name', 'permission_type', 'is_active', )
+
+
+class PermissionRetrieveSerializer(serializers.HyperlinkedModelSerializer):
+    feature = serializers.HyperlinkedRelatedField(view_name='api:feature-retrieve', read_only=True)
+
+    class Meta:
+        model = Permission
+        fields = ('pk', 'feature', 'permission_name', 'permission_type', 'is_active', )
+
+
+
+# Permission Group serializers
+class PermissionGroupListSerializer(serializers.HyperlinkedModelSerializer):
+    detail_url = serializers.HyperlinkedIdentityField(view_name='api:permission-group-retrieve', read_only=True)
+    permission = PermissionRetrieveSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = PermissionGroup
+        fields = ('pk', 'detail_url', 'group_name', 'permission', 'is_org_admin', 'is_super_user', 'is_active',
+                  'user_level', )
+
+
+class PermissionGroupRetrieveSerializer(serializers.HyperlinkedModelSerializer):
+    permission = PermissionRetrieveSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = PermissionGroup
+        fields = ('pk', 'group_name', 'permission', 'is_org_admin', 'is_super_user', 'is_active', 'user_level', )
+
+
+
 # Customer University Permission Group serializer
 class CustomerUPGListSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='api:customer-upg-retrieve')
@@ -101,40 +140,3 @@ class FeatureRetrieveSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Feature
         fields = ('pk', 'feature_group', 'feature_name', )
-
-
-# Permission serializers
-class PermissionListSerializer(serializers.HyperlinkedModelSerializer):
-    detail_url = serializers.HyperlinkedIdentityField(view_name='api:permission-retrieve', read_only=True)
-    feature = serializers.HyperlinkedRelatedField(view_name='api:feature-retrieve', read_only=True)
-
-    class Meta:
-        model = Permission
-        fields = ('pk', 'detail_url', 'feature', 'permission_name', 'permission_type', 'is_active', )
-
-
-class PermissionRetrieveSerializer(serializers.HyperlinkedModelSerializer):
-    feature = serializers.HyperlinkedRelatedField(view_name='api:feature-retrieve', read_only=True)
-
-    class Meta:
-        model = Permission
-        fields = ('pk', 'feature', 'permission_name', 'permission_type', 'is_active', )
-
-
-# Permission Group serializers
-class PermissionGroupListSerializer(serializers.HyperlinkedModelSerializer):
-    detail_url = serializers.HyperlinkedIdentityField(view_name='api:permission-group-retrieve', read_only=True)
-    permission = PermissionRetrieveSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = PermissionGroup
-        fields = ('pk', 'detail_url', 'group_name', 'permission', 'is_org_admin', 'is_super_user', 'is_active',
-                  'user_level', )
-
-
-class PermissionGroupRetrieveSerializer(serializers.HyperlinkedModelSerializer):
-    permission = PermissionRetrieveSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = PermissionGroup
-        fields = ('pk', 'group_name', 'permission', 'is_org_admin', 'is_super_user', 'is_active', 'user_level', )
