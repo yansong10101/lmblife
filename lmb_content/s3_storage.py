@@ -15,9 +15,9 @@ def make_org_s3_initial_directories(university_name, university_id):
 
 def make_image_filename(key_prefix, file_extension):
     """
-    For now, append timestamp only for image file name, because article name is unique
-    :param file_extension: file extension
-    :return: return file name with timestamp as suffix
+        For now, append timestamp only for image file name, because article name is unique
+        :param file_extension: file extension
+        :return: return file name with timestamp as suffix
     """
     if file_extension:
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')

@@ -1,6 +1,11 @@
-from lmb_api.utils import *
 from django.contrib.auth import logout as django_logout, login as django_login
-from lmb.forms import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm)
+from lmb_api.utils import (response_message, cache_user, is_authenticate_user, update_admin_permission_group,
+                           get_cache, Cache)
+from lmb_api.restful.lmb_api import create_customer
+from lmb import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm)
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 
 
 @api_view(['POST', ])
@@ -27,7 +32,7 @@ def customer_signup(request):
 def logout(request):
     if request.method == 'POST':
         token = request.POST['token']
-        user_cache = LMBCache()
+        user_cache = Cache()
         user_cache.delete(token)
         django_logout(request)
         return Response(data={}, status=status.HTTP_200_OK)
@@ -73,8 +78,7 @@ def grant_admin_permission_groups(request):
         permission_group_list = [int(i) for i in request.POST.getlist('permission_groups[]')]
         if form.is_valid() and permission_group_list:
             user = form.authenticate()
-            if isinstance(user, OrgAdmin):
-                update_admin_permission_group(user, permission_group_list)
-                return Response(data=response_message(code=200), status=status.HTTP_200_OK)
+            update_admin_permission_group(user, permission_group_list)
+            return Response(data=response_message(code=200), status=status.HTTP_200_OK)
         return Response(data=response_message(message='Invalid inputs'), status=status.HTTP_400_BAD_REQUEST)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
