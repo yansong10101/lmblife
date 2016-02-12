@@ -5,6 +5,7 @@ from django import forms
 from lmb_content.s3_storage import S3Storage, make_org_s3_initial_directories
 from lmblife.settings import AWS_BUCKET_ORG_WIKI
 from lmb_api.utils import response_message
+from lmb_content import S3, Cache
 
 TEST_S3_KEY_PREFIX = 'test-upload/demo-upload/'
 
