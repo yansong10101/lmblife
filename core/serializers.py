@@ -12,6 +12,7 @@ class UniversityListSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class UniversityRetrieveSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = University
         fields = ('pk', 'university_name', 'university_code', )
@@ -19,6 +20,7 @@ class UniversityRetrieveSerializer(serializers.HyperlinkedModelSerializer):
 
 # Org Admin serializer
 class OrgAdminListSerializer(serializers.HyperlinkedModelSerializer):
+    university = UniversityRetrieveSerializer(read_only=True)
 
     class Meta:
         model = OrgAdmin
@@ -26,6 +28,7 @@ class OrgAdminListSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class OrgAdminRetrieveSerializer(serializers.HyperlinkedModelSerializer):
+    university = UniversityRetrieveSerializer(read_only=True)
 
     class Meta:
         model = OrgAdmin
