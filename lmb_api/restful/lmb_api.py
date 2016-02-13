@@ -240,7 +240,7 @@ def create_update_permission_group(request, pk=None):
             form = PermissionGroupForm(request.POST)
             if not form.is_valid():
                 return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
-            PermissionGroup.permission_groups.create_permission_group(permission_list, **form.cleaned_data)
+            PermissionGroup.create(permission_list, **form.cleaned_data)
         elif pk:
             permission_group = get_object_or_404(PermissionGroup, pk=pk)
             form = PermissionGroupForm(request.POST, instance=permission_group)
