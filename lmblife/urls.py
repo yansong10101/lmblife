@@ -19,12 +19,12 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    # url(r'^api/', include('api.urls', namespace='api', app_name='api')),
+    url(r'^api/', include('lmb_api.urls', namespace='api', app_name='api')),
 ]
 
 if DEVELOPMENT_MODE:
     urlpatterns = [
         url(r'^admin/', include(admin.site.urls)),
-        # url(r'^api/', include('api.urls', namespace='api', app_name='api')),
+        url(r'^api/', include('lmb_api.urls', namespace='api', app_name='api')),
         # url(r'^test-case/', include('test_case.urls', namespace='test_case', app_name='test_case')),
     ]

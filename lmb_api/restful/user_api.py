@@ -72,7 +72,7 @@ def reset_password(request):
 
 @api_view(['POST', ])
 def grant_admin_permission_groups(request):
-    # FIXME : Check if user login as president
+    # FIXME : Check if user is president
     if request.method == 'POST':
         form = GrantUserPermissionForm(request.POST)
         permission_group_list = [int(i) for i in request.POST.getlist('permission_groups[]')]
