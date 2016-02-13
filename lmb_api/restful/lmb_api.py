@@ -145,8 +145,8 @@ class FeatureGroupDetail(generics.RetrieveAPIView):
 @api_view(['POST', 'PUT', ])
 def create_update_feature_group(request, pk=None):
     """
-        We do not check permission since the feature group is only created by LMB internal team,
-        all university should have the same visibility of all base feature groups.
+        We do not check permission since the feature group is only created by LMB internally,
+        all universities should have the same visibility of all base feature groups.
     """
     response_data = {}
     if request.method == 'POST' or request.method == 'PUT':

@@ -2,10 +2,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 from django import forms
-from lmb_content.s3_storage import S3Storage, make_org_s3_initial_directories
+# from lmb_content.s3_storage import S3Storage, make_org_s3_initial_directories
 from lmblife.settings import AWS_BUCKET_ORG_WIKI
 from lmb_api.utils import response_message
-from lmb_content import S3, Cache
+from lmb_content import S3
 
 TEST_S3_KEY_PREFIX = 'test-upload/demo-upload/'
 
@@ -30,8 +30,7 @@ class GetKeysForm(forms.Form):
 @api_view(['POST', ])
 def upload_image(request):
     # FIXME : update key path and bucket name
-    s3 = S3Storage(AWS_BUCKET_ORG_WIKI)
-    response_data = {}
+    s3 = S3(AWS_BUCKET_ORG_WIKI)
     if request.method == 'POST':
         form = ImageFileForm(request.POST, request.FILES)
         if not form.is_valid():
@@ -44,8 +43,7 @@ def upload_image(request):
 
 @api_view(['POST', ])
 def upload_wiki(request):
-    s3 = S3Storage(AWS_BUCKET_ORG_WIKI)
-    response_data = {}
+    s3 = S3(AWS_BUCKET_ORG_WIKI)
     if request.method == 'POST':
         form = WikiFileForm(request.POST)
         if form.is_valid():
@@ -61,7 +59,7 @@ def upload_wiki(request):
 
 @api_view(['POST', ])
 def get_items(request):
-    s3 = S3Storage(AWS_BUCKET_ORG_WIKI)
+    s3 = S3(AWS_BUCKET_ORG_WIKI)
     response_data = {}
     if request.method == 'POST':
         form = GetKeysForm(request.data)
@@ -78,7 +76,7 @@ def get_items(request):
 
 @api_view(['POST', ])
 def delete_wiki(request):
-    s3 = S3Storage(AWS_BUCKET_ORG_WIKI)
+    s3 = S3(AWS_BUCKET_ORG_WIKI)
     response_data = {}
     if request.method == 'POST':
         key_name = request.POST['key_name'] or None

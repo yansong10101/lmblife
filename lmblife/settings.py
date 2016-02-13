@@ -84,15 +84,15 @@ else:
         'default': dj_database_url.parse(os.environ.get('DATABASE_URL', None))
     }
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'administration.authentication.UserAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ),
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.IsAuthenticated',
-    # )
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'administration.authentication.UserAuthentication',
+#         'rest_framework.authentication.SessionAuthentication',
+#     ),
+#     # 'DEFAULT_PERMISSION_CLASSES': (
+#     #     'rest_framework.permissions.IsAuthenticated',
+#     # )
+# }
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
