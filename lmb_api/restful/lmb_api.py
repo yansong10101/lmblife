@@ -1,4 +1,12 @@
-from lmb import *
+from core.models import Customer, University, OrgAdmin, CustomerUPG, FeatureGroup, Feature, Permission, PermissionGroup
+from core.serializers import (UniversityListSerializer, UniversityRetrieveSerializer,
+                              OrgAdminListSerializer, OrgAdminRetrieveSerializer, CustomerListSerializer,
+                              CustomerRetrieveSerializer, PermissionListSerializer, PermissionRetrieveSerializer,
+                              PermissionGroupListSerializer, PermissionGroupRetrieveSerializer,
+                              CustomerUPGListSerializer, CustomerUPGRetrieveSerializer, FeatureGroupListSerializer,
+                              FeatureGroupRetrieveSerializer, FeatureListSerializer, FeatureRetrieveSerializer)
+from core.forms import (UniversityForm, OrgAdminCreateForm, CustomerCreationForm, CustomerUPGForm, FeatureGroupForm,
+                        FeatureForm, PermissionGroupForm)
 from rest_framework.decorators import api_view
 from rest_framework import generics
 from rest_framework.response import Response

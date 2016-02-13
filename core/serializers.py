@@ -1,5 +1,5 @@
-from lmb.models import Customer, University, OrgAdmin, CustomerUPG, FeatureGroup, Feature, Permission, PermissionGroup
 from rest_framework import serializers
+from core.models import Customer, University, OrgAdmin, CustomerUPG, FeatureGroup, Feature, Permission, PermissionGroup
 
 
 # University Model serializer

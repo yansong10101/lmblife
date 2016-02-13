@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import ugettext_lazy as _
-from .forms import *
+from core.models import University, FeatureGroup, Customer, OrgAdmin, PermissionGroup
+from core.forms import OrgAdminCreateForm, CustomerCreationForm
 
 admin.site.site_header = _('留美帮')
 admin.site.site_title = _('留美帮')

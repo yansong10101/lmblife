@@ -1,8 +1,8 @@
 from django.contrib.auth import logout as django_logout, login as django_login
+from core.forms import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm)
 from lmb_api.utils import (response_message, cache_user, is_authenticate_user, update_admin_permission_group,
                            get_cache, Cache)
 from lmb_api.restful.lmb_api import create_customer
-from lmb import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm)
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
