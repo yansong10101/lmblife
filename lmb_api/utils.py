@@ -2,7 +2,7 @@ import binascii
 import os
 # from lmb_api.restful.lmb_api import *
 from lmb_content import Cache
-from lmb import OrgAdmin, Customer, CustomerUPG
+from core.models import OrgAdmin, Customer, CustomerUPG
 
 
 def generate_key():

@@ -1,9 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser
-from lmb.managers import (UniversityManager, FeatureGroupManager, FeatureManager, PermissionManager,
-                          PermissionGroupManager, OrgAdminManager, CustomerManager, CustomerUPGManager)
 from django.core import validators
 from django.utils.translation import ugettext_lazy as _
+from core.managers import (AbstractBaseUser, UniversityManager, FeatureGroupManager, FeatureManager, PermissionManager,
+                           PermissionGroupManager, OrgAdminManager, CustomerManager, CustomerUPGManager)
 from django.shortcuts import get_object_or_404
 
 

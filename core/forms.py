@@ -1,5 +1,5 @@
-from .models import University, OrgAdmin, Customer, CustomerUPG, FeatureGroup, Feature, PermissionGroup
 from django import forms
+from core.models import University, OrgAdmin, Customer, CustomerUPG, FeatureGroup, Feature, PermissionGroup
 
 
 USER_BACKEND = 'django.contrib.auth.backends.ModelBackend'
