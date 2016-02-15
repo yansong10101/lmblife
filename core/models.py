@@ -281,3 +281,14 @@ class CustomerUPG(models.Model):
         customer_upg.grant_level = customer_upg.permission_group.user_level
         customer_upg.save()
         return customer_upg
+
+
+class CustomerMessage(models.Model):
+    customer = models.ManyToManyField(Customer, related_name='customer_message', null=True)
+    admin = models.ManyToManyField(OrgAdmin, related_name='org_admin_message', null=True)
+    type = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=255)
+    message = models.TextField(blank=True)
+
+    def __str__(self):
+        return '-'.join([self.subject, self.message])

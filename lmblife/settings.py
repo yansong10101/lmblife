@@ -45,7 +45,8 @@ INSTALLED_APPS = (
     'corsheaders',
     'core',
     'lmb_api',
-    'lmb_content',
+    'content',
+    'content.weipost',
 )
 
 MIDDLEWARE_CLASSES = (
