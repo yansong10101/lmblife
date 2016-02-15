@@ -1,7 +1,7 @@
 import binascii
 import os
 # from lmb_api.restful.lmb_api import *
-from lmb_content import Cache
+from content import Cache
 from core.models import OrgAdmin, Customer, CustomerUPG
 
 

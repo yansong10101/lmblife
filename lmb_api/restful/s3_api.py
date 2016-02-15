@@ -2,10 +2,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 from django import forms
-# from lmb_content.s3_storage import S3Storage, make_org_s3_initial_directories
+# from content.s3_storage import S3Storage, make_org_s3_initial_directories
 from lmblife.settings import AWS_BUCKET_ORG_WIKI
 from lmb_api.utils import response_message
-from lmb_content import S3
+from content import S3
 
 TEST_S3_KEY_PREFIX = 'test-upload/demo-upload/'
 
