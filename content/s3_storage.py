@@ -1,6 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from lmblife.settings import (AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_DEFAULT_SITE, AWS_BUCKET_USER_ARCHIVE, )
-from boto.s3.connection import S3Connection, Key
+from boto.s3.connection import S3Connection
 from django.core.files.base import ContentFile
 from datetime import datetime
 import mimetypes
