@@ -1,16 +1,16 @@
 from django.core.exceptions import ObjectDoesNotExist
 from lmblife.settings import (AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_DEFAULT_SITE, AWS_BUCKET_USER_ARCHIVE, )
-from boto.s3.connection import S3Connection
+from boto.s3.connection import S3Connection, Key
 from django.core.files.base import ContentFile
 from datetime import datetime
 import mimetypes
 
 
-def make_org_s3_initial_directories(university_name, university_id):
-    # TODO : add university directory prefix
-    org_wiki_root = '%s_%s_wiki' % university_name, university_id
-    org_image_root = '%s_%s_image' % university_name, university_id
-    return dict({'wiki_root': org_wiki_root, 'image_root': org_image_root, })
+def make_org_s3_initial_directory_names(university_name, university_id):
+    org_root = '{}_{}_root/'.format(university_name, university_id)
+    org_wiki_root = '{}{}_{}_wiki/'.format(org_root, university_name, university_id)
+    org_image_root = '{}{}_{}_image/'.format(org_root, university_name, university_id)
+    return dict({'org_wiki_root': org_wiki_root, 'org_image_root': org_image_root, })
 
 
 def make_image_filename(key_prefix, file_extension):
@@ -68,13 +68,6 @@ class S3Storage:
         """
         return self.get_bucket(AWS_BUCKET_DEFAULT_SITE)
 
-    def get_org_bucket(self, university):
-        """
-        Get University bucket
-        """
-        bucket_name = make_org_bucket_name(university)
-        return self.get_bucket(bucket_name)
-
     def get_user_bucket(self):
         """
         Get Customer bucket
@@ -120,6 +113,7 @@ class S3Storage:
             new_key.set_contents_from_file(file)
 
     def upload_image(self, file, key_prefix):
+        # fixme : check key_prefix end with '/'
         filename = str(file)
         content_type = mimetypes.guess_type(filename)[0]
         # check if file is image
@@ -133,11 +127,12 @@ class S3Storage:
             raise Exception('Invalid file type : Not a image!')
 
     def upload_wiki(self, file, new_key, old_key=None):
-        # Failed to save if:
-        # 1. old_key is None and new_key already exist
-        # 2. old_key has value and old_key not equals to new_key and new_key already exist
+        """
+        Failed to save if:
+            1. old_key is None and new_key already exist
+            2. old_key has value and old_key not equals to new_key and new_key already exist
+        """
         if (old_key is None or (old_key and old_key != new_key)) and self.is_file_exist(new_key):
-            print(old_key, new_key)
             return None
         if old_key and self.is_file_exist(old_key):
             self.delete_file(old_key)

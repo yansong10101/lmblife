@@ -18,6 +18,7 @@ class AbstractWeiPost(models.Model):
     created_date = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified_date = models.DateTimeField(auto_now=True, editable=False)
     is_edited = models.BooleanField(default=False)
+    post_subject = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
     post_message = models.TextField()
     comments_count = models.IntegerField(default=0)

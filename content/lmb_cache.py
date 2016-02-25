@@ -55,10 +55,6 @@ class LMBCache:
         return self.__delete__(key, version)
 
     @classmethod
-    def close_connection(cls):
-        cache.close()
-
-    @classmethod
     def make_datetime_version(cls):
         return datetime.now().strftime('%Y-%m-%d %H:%M')
 

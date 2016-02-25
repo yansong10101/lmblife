@@ -1,5 +1,5 @@
 from django.conf.urls import url, patterns
-from lmb_api.restful import core_api, s3_api, user_api
+from lmb_api.restful import core_api, s3_api, user_api, weipost_api
 
 # LMB Core APIs
 urlpatterns = patterns(
@@ -41,8 +41,9 @@ urlpatterns = patterns(
     url(r'customer-upg/$', core_api.CustomerUPGList.as_view(), name='customer-upg-list'),
     url(r'customer-upg/(?P<pk>[0-9]+)/$', core_api.CustomerUPGRetrieve.as_view(),
         name='customer-upg-retrieve'),
-    url(r'customer-upg/create/$', core_api.create_update_customer_upg, name='customer-upg-creation'),
-    url(r'customer-upg/update/$', core_api.create_update_customer_upg, name='customer-upg-update'),
+    # "create_update_customer_upg" is used by customer and admin portal to apply and grant
+    # url(r'customer-upg/create/$', core_api.create_update_customer_upg, name='customer-upg-creation'),
+    # url(r'customer-upg/update/$', core_api.create_update_customer_upg, name='customer-upg-update'),
 )
 
 # User Portals
@@ -53,9 +54,19 @@ urlpatterns += patterns(
     url(r'portal/user/logout/$', user_api.logout, name='user-logout'),
     url(r'portal/user/change-password/$', user_api.change_password, name='change-password'),
     url(r'portal/user/reset-password/$', user_api.reset_password, name='reset-password'),
-    url(r'portal/grant-perm-group/admin/$', user_api.grant_admin_permission_groups, name='org-admin-grant-permissions'),
+    url(r'portal/customer-permission/apply/$', user_api.create_update_customer_upg, name='customer-upg-create'),
+    url(r'portal/refresh-cache/user-cache/$', user_api.refresh_user_cache, name='refresh-user-cache'),
 )
 
+# Org Admin Portals
+urlpatterns += patterns(
+    '',
+    url(r'portal/grant-perm-group/admin/$', user_api.grant_admin_permission_groups, name='org-admin-grant-permissions'),
+    url(r'portal/grant-perm-group/customer/$', user_api.create_update_customer_upg, name='customer-upg-grant'),
+)
+
+# LMB Content APIs
+#
 # Wiki APIs
 urlpatterns += patterns(
     '',
@@ -65,7 +76,13 @@ urlpatterns += patterns(
     url(r'portal/keys/delete/$', s3_api.delete_wiki, name='delete-keys'),
 )
 
-# LMB Content APIs
+# WeiPost APIs
 urlpatterns += patterns(
     '',
+    url(r'content/wei-post/list-post/$', weipost_api.JieJiPostList.as_view(), name='jie-ji-post-list'),
+    url(r'content/wei-post/(?P<pk>[0-9]+)/get/$', weipost_api.JieJiPostRetrieve.as_view(), name='jie-ji-post-get'),
+
+    url(r'content/wei-comment/list-comment/$', weipost_api.JieJiCommentList.as_view(), name='jie-ji-comment-list'),
+    url(r'content/wei-comment/(?P<pk>[0-9]+)/get/$', weipost_api.JieJiCommentRetrieve.as_view(),
+        name='jie-ji-comment-get'),
 )
