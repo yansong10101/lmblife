@@ -2,15 +2,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 from django import forms
-# from content.s3_storage import S3Storage, make_org_s3_initial_directories
 from lmblife.settings import AWS_BUCKET_ORG_WIKI
 from lmb_api.utils import response_message
 from content import S3
 
-TEST_S3_KEY_PREFIX = 'test-upload/demo-upload/'
-
 
 class ImageFileForm(forms.Form):
+    key_prefix = forms.CharField()
     file = forms.FileField()
 
 
@@ -29,13 +27,12 @@ class GetKeysForm(forms.Form):
 
 @api_view(['POST', ])
 def upload_image(request):
-    # FIXME : update key path and bucket name
     s3 = S3(AWS_BUCKET_ORG_WIKI)
     if request.method == 'POST':
         form = ImageFileForm(request.POST, request.FILES)
         if not form.is_valid():
             return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
-        key_prefix = TEST_S3_KEY_PREFIX
+        key_prefix = form.cleaned_data['key_prefix']
         s3_key = s3.upload_image(request.FILES['file'], key_prefix)
         return Response(data={'s3_key': s3_key}, status=status.HTTP_201_CREATED)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)

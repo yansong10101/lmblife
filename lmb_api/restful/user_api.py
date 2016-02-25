@@ -1,8 +1,8 @@
 from django.contrib.auth import logout as django_logout, login as django_login
 from core.forms import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm)
-from lmb_api.utils import (response_message, cache_user, is_authenticate_user, update_admin_permission_group,
-                           get_cache, Cache)
-from lmb_api.restful.core_api import create_customer
+from lmb_api.utils import (response_message, refresh_or_create_user_cache, is_authenticate_user, get_cache, Cache,
+                           update_admin_permission_group, check_request_user_role)
+from lmb_api.restful.core_api import create_customer, create_update_customer_upg
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,7 +16,7 @@ def login(request):
             (user, token) = form.authenticate()
             if user:
                 django_login(request, user)
-                response_data = dict({'result': 'success', 'data': cache_user(user, token), })
+                response_data = dict({'result': 'success', 'data': refresh_or_create_user_cache(token, user), })
                 return Response(data=response_data, status=status.HTTP_200_OK)
         return Response(data=response_message(message='Invalid username or password'),
                         status=status.HTTP_400_BAD_REQUEST)
@@ -72,13 +72,26 @@ def reset_password(request):
 
 @api_view(['POST', ])
 def grant_admin_permission_groups(request):
-    # FIXME : Check if user is president
     if request.method == 'POST':
         form = GrantUserPermissionForm(request.POST)
         permission_group_list = [int(i) for i in request.POST.getlist('permission_groups[]')]
-        if form.is_valid() and permission_group_list:
+        if form.is_valid() and permission_group_list and check_request_user_role(request.POST['token'], ('president',)):
             user = form.authenticate()
             update_admin_permission_group(user, permission_group_list)
             return Response(data=response_message(code=200), status=status.HTTP_200_OK)
         return Response(data=response_message(message='Invalid inputs'), status=status.HTTP_400_BAD_REQUEST)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['POST', ])
+def apply_university_permission(request):
+    return create_update_customer_upg(request)
+
+
+@api_view(['GET', ])
+def refresh_user_cache(request):
+    if request.method == 'GET':
+        token = request.GET['token']
+        response_data = dict({'result': 'success', 'data': refresh_or_create_user_cache(token), })
+        return Response(data=response_data, status=status.HTTP_200_OK)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)

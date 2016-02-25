@@ -148,7 +148,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='customerupg',
             name='permission_group',
-            field=models.ForeignKey(to='core.PermissionGroup', related_name='customer_upg_permission_group'),
+            field=models.ForeignKey(to='core.PermissionGroup', related_name='customer_upg_permission_group', null=True),
         ),
         migrations.AddField(
             model_name='customerupg',

@@ -12,7 +12,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from lmb_api.utils import response_message
+from lmb_api.utils import response_message, check_request_user_role, to_json
 
 
 # University APIs
@@ -35,14 +35,28 @@ def create_update_university(request, pk=None):
         1. create a super user (president)
         2. grant all permissions to president
         3. can create group ?
+        4. create S3 initial keys -- v
     """
+
+    def init_org_s3_keys(uni_org):
+        from content import make_org_s3_initial_directory_names, S3, AWS_BUCKET_ORG_WIKI
+        org_id = uni_org.pk
+        org_name = uni_org.university_name
+        initial_dict = make_org_s3_initial_directory_names(org_name, org_id)
+
+        s3_con = S3(AWS_BUCKET_ORG_WIKI)
+        # TODO : add initial file to s3 -- need template
+        for key_path in initial_dict.values():
+            s3_con.upload_wiki(None, key_path)
+
     response_data = {}
     if request.method == 'POST' or request.method == 'PUT':
         if pk is None:
             form = UniversityForm(request.POST)
             if not form.is_valid():
                 return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
-            University.create(**form.cleaned_data)
+            org = University.create(**form.cleaned_data)
+            init_org_s3_keys(org)
         else:
             university = get_object_or_404(University, pk=pk)
             form = UniversityForm(request.POST, instance=university)
@@ -117,16 +131,18 @@ class CustomerUPGRetrieve(generics.RetrieveAPIView):
 
 @api_view(['POST', ])
 def create_update_customer_upg(request):
-    response_data = {}
+    response_data = dict()
     if request.method == 'POST':
         form = CustomerUPGForm(request.POST)
         if not form.is_valid():
             return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
-        if not form.validate_existing():
-            CustomerUPG.create_customer_upg(**form.cleaned_data)
+        if form.validate_existing() and check_request_user_role(request.POST['token'], ('admin', 'president', )):
+            response_data['result'] = form.update_customer_upg()
+        elif not form.validate_existing() and check_request_user_role(request.POST['token'], ('customer', )):
+            response_data['result'] = form.create_customer_upg()
         else:
-            form.update_customer_university_group()
-        return Response(data=response_data, status=status.HTTP_201_CREATED)
+            return Response(data=response_message(code=401), status=status.HTTP_401_UNAUTHORIZED)
+        return Response(data=to_json(response_data), status=status.HTTP_200_OK)
     return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 

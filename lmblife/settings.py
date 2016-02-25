@@ -14,25 +14,22 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'q0hpqj%26qhxi7==uwgbir0k(n5f_tm2jf$t&qaih2=h3jssc#'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-DEVELOPMENT_MODE = os.path.exists("/Users/zys")
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', ]
+if os.path.exists("/Users/zys"):
+    DEBUG = DEVELOPMENT_MODE = True
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', ]
+    CORS_ORIGIN_ALLOW_ALL = True
+    CORS_ORIGIN_WHITELIST = ALLOWED_HOSTS
+else:
+    DEBUG = DEVELOPMENT_MODE = False
+    ALLOWED_HOSTS = ['0.0.0.0', ]
+    CORS_ORIGIN_WHITELIST = ALLOWED_HOSTS
 
 # Application definition
-
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -47,6 +44,7 @@ INSTALLED_APPS = (
     'lmb_api',
     'content',
     'content.weipost',
+    'mailer',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -66,9 +64,7 @@ ROOT_URLCONF = 'lmblife.urls'
 WSGI_APPLICATION = 'lmblife.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-
+# Database setup
 if DEVELOPMENT_MODE:
     DATABASES = {
         'default': {
@@ -84,16 +80,6 @@ else:
     DATABASES = {
         'default': dj_database_url.parse(os.environ.get('DATABASE_URL', None))
     }
-
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'administration.authentication.UserAuthentication',
-#         'rest_framework.authentication.SessionAuthentication',
-#     ),
-#     # 'DEFAULT_PERMISSION_CLASSES': (
-#     #     'rest_framework.permissions.IsAuthenticated',
-#     # )
-# }
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -112,8 +98,7 @@ USE_TZ = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -128,12 +113,15 @@ TEMPLATES = [
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
+
+# We do not have static file on server side, set empty by default
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = ''
 STATIC_URL = '/static/'
 
-# AWS S3 setup
 
+# AWS S3 setup
+#
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY', None)
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
 # AWS Buckets setup
@@ -144,13 +132,27 @@ AWS_BUCKET_ORG_WIKI = 'lmb-org-wiki'
 AWS_S3_DEFAULT_FORMAT = 'https://%s.s3.amazonaws.com' % AWS_BUCKET_DEFAULT_SITE
 AWS_S3_USER_ARCHIVE_FORMAT = 'https://%s.s3.amazonaws.com' % AWS_BUCKET_USER_ARCHIVE
 
-
 AWS_HEADERS = {  # see http://developer.yahoo.com/performance/rules.html#expires
     'Expires': 'Thu, 31 Dec 2099 20:00:00 GMT',
     'Cache-Control': 'max-age=94608000',
 }
 
+
+# Email setup
+#
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+
+EMAIL_HOST_USER = os.environ.get('QA_EMAIL', None)
+EMAIL_HOST_PASSWORD = os.environ.get('QA_EMAIL_PASSWORD', None)
+
+# EMAIL_BACKEND = "mailer.backend.DbBackend"
+# MAILER_EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+
 # Memcachier settings
+#
 os.environ['MEMCACHE_SERVERS'] = os.environ.get('MEMCACHIER_SERVERS', '').replace(',', ';')
 os.environ['MEMCACHE_USERNAME'] = os.environ.get('MEMCACHIER_USERNAME', '')
 os.environ['MEMCACHE_PASSWORD'] = os.environ.get('MEMCACHIER_PASSWORD', '')
@@ -191,8 +193,10 @@ CACHES = {
     }
 }
 
-if DEBUG or DEVELOPMENT_MODE:
-    CORS_ORIGIN_ALLOW_ALL = True
-    CORS_ORIGIN_WHITELIST = ALLOWED_HOSTS
+# only for QA and development, delete test when apply to production
+if DEVELOPMENT_MODE:
     AWS_BUCKET_USER_ARCHIVE = 'test-2016'
     AWS_BUCKET_ORG_WIKI = 'test-2016'
+else:
+    AWS_BUCKET_USER_ARCHIVE = 'lmb-qa-org-wiki'
+    AWS_BUCKET_ORG_WIKI = 'lmb-qa-org-wiki'

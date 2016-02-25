@@ -64,6 +64,7 @@ class Feature(models.Model):
     feature_name = models.CharField(max_length=150, unique=True)
     display_name = models.CharField(max_length=150, blank=True)
     description_wiki_key = models.CharField(max_length=255, blank=True)
+    # view_type = models.CharField(max_length=50, blank=True)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
 
@@ -265,9 +266,15 @@ class CustomerUPG(models.Model):
     """
     customer = models.ForeignKey(Customer, related_name='customer_upg_customer')
     university = models.ForeignKey(University, related_name='customer_upg_university')
-    permission_group = models.ForeignKey(PermissionGroup, related_name='customer_upg_permission_group')
+    permission_group = models.ForeignKey(PermissionGroup, null=True, blank=True,
+                                         related_name='customer_upg_permission_group')
     grant_level = models.IntegerField(default=0, verbose_name='grant user level')
-    approval_comment = models.TextField(blank=True)
+    apply_from_feature = models.ForeignKey(Feature, related_name='customer_upg_feature', null=True, blank=True)
+    is_approve = models.NullBooleanField(null=True)
+    admin_comment = models.TextField(blank=True)
+    customer_comment = models.TextField(blank=True)
+    # created_date = models.DateTimeField(auto_now_add=True, editable=False)
+    # last_modified_date = models.DateTimeField(auto_now=True, editable=False)
 
     objects = models.Manager()
     customer_upg = CustomerUPGManager()
@@ -275,19 +282,14 @@ class CustomerUPG(models.Model):
     def __str__(self):
         return '-'.join((str(self.customer), str(self.university), str(self.permission_group), str(self.grant_level)))
 
-    @classmethod
-    def create_customer_upg(cls, **kwargs):
-        customer_upg = cls(**kwargs)
-        customer_upg.grant_level = customer_upg.permission_group.user_level
-        customer_upg.save()
-        return customer_upg
-
 
 class CustomerMessage(models.Model):
-    customer = models.ManyToManyField(Customer, related_name='customer_message', null=True)
-    admin = models.ManyToManyField(OrgAdmin, related_name='org_admin_message', null=True)
+    customer = models.ManyToManyField(Customer, related_name='customer_message')
+    admin = models.ManyToManyField(OrgAdmin, related_name='org_admin_message')
+    # created_date = models.DateTimeField(auto_now_add=True, editable=False)
+    # last_modified_date = models.DateTimeField(auto_now=True, editable=False)
     type = models.CharField(max_length=255, blank=True)
-    subject = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255, blank=True)
     message = models.TextField(blank=True)
 
     def __str__(self):

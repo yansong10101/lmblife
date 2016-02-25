@@ -3,6 +3,11 @@ from core.models import University, OrgAdmin, Customer, CustomerUPG, FeatureGrou
 
 
 USER_BACKEND = 'django.contrib.auth.backends.ModelBackend'
+FORM_ERROR_CODE_MAP = {
+    1: 'invalid',
+    2: 'missing arg',
+    3: 'not match',
+}
 
 
 class UniversityForm(forms.ModelForm):
@@ -62,30 +67,53 @@ class CustomerUPGForm(forms.ModelForm):
 
     class Meta:
         model = CustomerUPG
-        fields = ('customer', 'university', 'permission_group', 'approval_comment', )
+        fields = ('customer', 'university', 'permission_group', 'is_approve', 'admin_comment', 'customer_comment',
+                  'apply_from_feature', )
 
     def validate_existing(self):
         customer = self.cleaned_data.get('customer')
         university = self.cleaned_data.get('university')
-        customer_upg_list = CustomerUPG.objects.all().filter(university=university)
-        for customer_item in customer_upg_list:
-            if customer.pk == customer_item.pk:
-                return True
+        customer_in_university = CustomerUPG.customer_upg.all().filter(customer=customer, university=university) or None
+        if customer_in_university and customer_in_university.count() > 1:
+            raise forms.ValidationError('Create CustomerUPG Exception: should be unique!' + str(customer_in_university),
+                                        code=FORM_ERROR_CODE_MAP[1])
+        if customer_in_university and customer_in_university.count() == 1:
+            return True
         return False
 
-    def update_customer_university_group(self):
+    def create_customer_upg(self):
         customer = self.cleaned_data.get('customer')
         university = self.cleaned_data.get('university')
-        permission_group = self.cleaned_data.get('permission_group')
+        if self.validate_existing():
+            raise forms.ValidationError('Already exist !', code=FORM_ERROR_CODE_MAP[1])
+        customer_comment = self.cleaned_data.get('customer_comment')
+        feature = self.cleaned_data.get('apply_from_feature')
+        customer_upg = CustomerUPG(customer=customer, university=university, customer_comment=customer_comment,
+                                   apply_from_feature=feature)
+        customer_upg.save()
+        return customer_upg
+
+    def update_customer_upg(self):
+        customer = self.cleaned_data.get('customer')
+        university = self.cleaned_data.get('university')
+        permission_group = self.cleaned_data.get('permission_group') or None
+        is_approve = self.cleaned_data.get('is_approve')
+        admin_comment = self.cleaned_data.get('admin_comment')
         customer_in_university = CustomerUPG.customer_upg.all().filter(customer=customer, university=university) or None
+        if not permission_group or not is_approve or not admin_comment:
+            raise forms.ValidationError('Required Field [permission_group, is_approve, admin_comment] !',
+                                        code=FORM_ERROR_CODE_MAP[2])
         if customer_in_university is None or customer_in_university.count() > 1:
-            # TODO : write validation
-            raise Exception('Unknown object exception: !' + customer_in_university)
+            raise forms.ValidationError('Update CustomerUPG Exception: should be unique!' + str(customer_in_university),
+                                        code=FORM_ERROR_CODE_MAP[1])
         elif customer_in_university.count() == 1:
-            customer_in_university[0].permission_group = permission_group
-            customer_in_university[0].grant_level = permission_group.user_level
-            customer_in_university[0].save()
-        return customer_in_university[0]
+            customer_upg = customer_in_university[0]
+            customer_upg.permission_group = permission_group
+            customer_upg.grant_level = permission_group.user_level
+            customer_upg.is_approve = is_approve
+            customer_upg.admin_comment = admin_comment
+            customer_upg.save()
+            return customer_upg
 
 
 class UserAuthenticationForm(forms.Form):
