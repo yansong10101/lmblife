@@ -25,7 +25,8 @@ if os.path.exists("/Users/zys"):
     CORS_ORIGIN_ALLOW_ALL = True
     CORS_ORIGIN_WHITELIST = ALLOWED_HOSTS
 else:
-    DEBUG = DEVELOPMENT_MODE = False
+    DEBUG = True
+    DEVELOPMENT_MODE = False
     ALLOWED_HOSTS = ['0.0.0.0', ]
     CORS_ORIGIN_WHITELIST = ALLOWED_HOSTS
 
