@@ -10,7 +10,9 @@ _LMBUnauthorizedUser = u'Unauthorized user permission !'
 _LMBMethodNotAllowed = u'HTTP METHOD IS NOT ALLOWED'
 
 
-def generate_key():
+def generate_key(long_token=False):
+        if long_token:
+            return binascii.hexlify(os.urandom(40)).decode()
         return binascii.hexlify(os.urandom(20)).decode()
 
 
@@ -89,10 +91,27 @@ def refresh_or_create_user_cache(token, user=None):
     return user_data
 
 
+def set_email_verification_cache(token, user_email):
+    cache = Cache()
+    if token:
+        cache.set_token(token, {'email': user_email, })
+
+
 def is_authenticate_user(token):
     lmb_cache = Cache()
     if lmb_cache.is_exists(token):
         return True
+    return False
+
+
+def email_verification(token):
+    if is_authenticate_user(token):
+        data = get_cache(token)
+        customer = Customer.customers.get_auth_customer(data['email']) or None
+        if customer:
+            customer.is_approved = True
+            customer.save()
+            return True
     return False
 
 

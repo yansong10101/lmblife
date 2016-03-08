@@ -12,7 +12,8 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from lmb_api.utils import response_message, check_request_user_role, to_json
+from lmb_api.utils import response_message, check_request_user_role, to_json, generate_key, set_email_verification_cache
+from message.emailer import Email, TYPE_SIGNUP
 
 
 # University APIs
@@ -109,10 +110,18 @@ def create_customer(request):
     response_data = {}
     if request.method == 'POST':
         form = CustomerCreationForm(request.POST)
+        domain_name = request.META['HTTP_HOST']
         if not form.is_valid():
             return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
         form.clean_password2()
-        form.save()
+        user = form.save()
+        # generate token and cache user data
+        token = generate_key(long_token=True)
+        set_email_verification_cache(token, user.email)
+        # send verification email
+        mail = Email([user.email, ], TYPE_SIGNUP)
+        mail.send_mail_welcome({'username': user.email,
+                                'url': '{}/{}/{}'.format(domain_name, 'api/portal/email-token-verification', token)})
         return Response(data=response_data, status=status.HTTP_201_CREATED)
     return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 

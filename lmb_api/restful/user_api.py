@@ -1,7 +1,7 @@
 from django.contrib.auth import logout as django_logout, login as django_login
 from core.forms import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm)
 from lmb_api.utils import (response_message, refresh_or_create_user_cache, is_authenticate_user, get_cache, Cache,
-                           update_admin_permission_group, check_request_user_role)
+                           update_admin_permission_group, check_request_user_role, email_verification)
 from lmb_api.restful.core_api import create_customer, create_update_customer_upg
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -94,4 +94,12 @@ def refresh_user_cache(request):
         token = request.GET['token']
         response_data = dict({'result': 'success', 'data': refresh_or_create_user_cache(token), })
         return Response(data=response_data, status=status.HTTP_200_OK)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['GET', ])
+def email_token_verification(request):
+    if request.method == 'GET':
+        token = request.GET['token'] or None
+        return Response(data={'is_verified': email_verification(token), }, status=status.HTTP_200_OK)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)

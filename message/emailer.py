@@ -10,6 +10,10 @@ from lmb_api.utils import LMBEmailTemplateFailed
 EMAIL_BACKEND = "mailer.backend.DbBackend"
 MAILER_EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
+TYPE_SIGNUP = 'signup'
+TYPE_RESET_PASSWORD = 'reset_password'
+TYPE_LOG_EXCEPTIONS = 'log_exceptions'
+
 # email type mapping takes shortcut of basic email info setup
 # value list contains: [email_type, subject, template, priority]
 # TODO : django-mailer cannot setup multiple mail server, it will read default when flush queue
@@ -32,7 +36,8 @@ class Email:
 
         if email_for not in _email_spec_mapping.keys():
             email_for = 'default'
-        email_specs = _email_spec_mapping[email_for]
+        self.email_for = email_for
+        email_specs = _email_spec_mapping[self.email_for]
         (self.auth_user, self.auth_password) = EMAIL_ACCOUNT_MAP[email_specs[0]]
         self.subject = subject or email_specs[1]
         self.recipient_list = recipient_list
@@ -70,7 +75,7 @@ class Email:
                       self.auth_password)
 
     def send_mail_welcome(self, substitute_dict):
-        body_html = Email.make_template('signup', substitute_dict)
+        body_html = Email.make_template(self.email_for, substitute_dict)
         self._send_mail('', body_html)
 
     @classmethod
