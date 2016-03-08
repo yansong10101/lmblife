@@ -28,6 +28,7 @@ else:
     DEBUG = True
     DEVELOPMENT_MODE = False
     ALLOWED_HOSTS = ['0.0.0.0', ]
+    CORS_ORIGIN_ALLOW_ALL = True
     CORS_ORIGIN_WHITELIST = ALLOWED_HOSTS
 
 # Application definition
