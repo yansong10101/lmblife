@@ -121,7 +121,7 @@ def create_customer(request):
         # send verification email
         mail = Email([user.email, ], TYPE_SIGNUP)
         mail.send_mail_welcome({'username': user.email,
-                                'url': '{}/{}/{}'.format(domain_name, 'api/portal/email-token-verification', token)})
+                                'url': '{}/{}/?token={}'.format(domain_name, 'api/portal/email-token-verification', token)})
         return Response(data=response_data, status=status.HTTP_201_CREATED)
     return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 

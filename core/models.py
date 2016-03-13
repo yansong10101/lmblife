@@ -221,8 +221,7 @@ class Customer(AbstractBaseUser):
     student_id = models.CharField(max_length=50, blank=True)
     offer_number = models.CharField(max_length=255, blank=True)
     photo_url = models.CharField(max_length=150, blank=True)
-    # is_email_verified = models.BooleanField(default=False)
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False)  # for email verification check
     approval_level = models.IntegerField(default=0)
 
     USERNAME_FIELD = 'email'
