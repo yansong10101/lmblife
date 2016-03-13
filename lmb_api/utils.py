@@ -36,6 +36,7 @@ def _cache_user(user):
         response_data['email'] = response_data['username'] = user.email
         response_data['role'] = 'customer'
         response_data['is_approved'] = user.is_approved
+        response_data['email_check'] = user.is_approved
         response_data['permission_groups'] = list()
         upg_list = CustomerUPG.customer_upg.all().filter(customer=user)
         for upg in upg_list:
