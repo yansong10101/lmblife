@@ -269,12 +269,13 @@ class CustomerUPG(models.Model):
     permission_group = models.ForeignKey(PermissionGroup, null=True, blank=True,
                                          related_name='customer_upg_permission_group')
     grant_level = models.IntegerField(default=0, verbose_name='grant user level')
+    apply_level = models.IntegerField(default=0, verbose_name='apply user level')
     apply_from_feature = models.ForeignKey(Feature, related_name='customer_upg_feature', null=True, blank=True)
     is_approve = models.NullBooleanField(null=True)
     admin_comment = models.TextField(blank=True)
     customer_comment = models.TextField(blank=True)
-    # created_date = models.DateTimeField(auto_now_add=True, editable=False)
-    # last_modified_date = models.DateTimeField(auto_now=True, editable=False)
+    created_date = models.DateTimeField(auto_now_add=True, editable=False, null=True)
+    last_modified_date = models.DateTimeField(auto_now=True, editable=False, null=True)
 
     objects = models.Manager()
     customer_upg = CustomerUPGManager()
@@ -286,8 +287,8 @@ class CustomerUPG(models.Model):
 class CustomerMessage(models.Model):
     customer = models.ManyToManyField(Customer, related_name='customer_message')
     admin = models.ManyToManyField(OrgAdmin, related_name='org_admin_message')
-    # created_date = models.DateTimeField(auto_now_add=True, editable=False)
-    # last_modified_date = models.DateTimeField(auto_now=True, editable=False)
+    created_date = models.DateTimeField(auto_now_add=True, editable=False, null=True)
+    last_modified_date = models.DateTimeField(auto_now=True, editable=False, null=True)
     type = models.CharField(max_length=255, blank=True)
     subject = models.CharField(max_length=255, blank=True)
     message = models.TextField(blank=True)
