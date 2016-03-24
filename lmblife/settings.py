@@ -1,5 +1,4 @@
 import os
-import dj_database_url
 
 """
 Django settings for lmblife project.
@@ -66,22 +65,17 @@ ROOT_URLCONF = 'lmblife.urls'
 WSGI_APPLICATION = 'lmblife.wsgi.application'
 
 
-# Database setup
-if DEVELOPMENT_MODE:
-    DATABASES = {
-        'default': {
-            'NAME': 'lmb_prod',
-            'ENGINE': 'django.db.backends.mysql',
-            'USER': 'root',
-            'PASSWORD': 'newpwd',
-            'HOST': 'localhost',
-            'PORT': '3306',
-        }
+# QA/development database setup, using AWS RDS -- mysql
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'lmb_prod',
+        'USER': os.environ.get('RDS_USERNAME', None),
+        'PASSWORD': os.environ.get('RDS_PASSWORD', None),
+        'HOST': os.environ.get('RDS_HOSTNAME', None),
+        'PORT': '3306',
     }
-else:
-    DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL', None))
-    }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
