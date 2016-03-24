@@ -150,6 +150,13 @@ os.environ['MEMCACHE_SERVERS'] = os.environ.get('MEMCACHIER_SERVERS', '').replac
 os.environ['MEMCACHE_USERNAME'] = os.environ.get('MEMCACHIER_USERNAME', '')
 os.environ['MEMCACHE_PASSWORD'] = os.environ.get('MEMCACHIER_PASSWORD', '')
 
+# CACHES = {
+#     'default': {
+#         # 'BACKEND': 'django_elasticache.memcached.ElastiCache',
+#         'LOCATION': 'lmb-aws-qa-memcached.hp7wtj.0001.usw2.cache.amazonaws.com:11211',
+#     }
+# }
+
 CACHES = {
     'default': {
         # Use pylibmc
