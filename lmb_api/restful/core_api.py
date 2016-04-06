@@ -4,9 +4,11 @@ from core.serializers import (UniversityListSerializer, UniversityRetrieveSerial
                               CustomerRetrieveSerializer, PermissionListSerializer, PermissionRetrieveSerializer,
                               PermissionGroupListSerializer, PermissionGroupRetrieveSerializer,
                               CustomerUPGListSerializer, CustomerUPGRetrieveSerializer, FeatureGroupListSerializer,
-                              FeatureGroupRetrieveSerializer, FeatureListSerializer, FeatureRetrieveSerializer)
+                              FeatureGroupRetrieveSerializer, FeatureListSerializer, FeatureRetrieveSerializer,
+                              FeatureSlugSerializer)
 from core.forms import (UniversityForm, OrgAdminCreateForm, CustomerCreationForm, CustomerUPGForm, FeatureGroupForm,
                         FeatureForm, PermissionGroupForm)
+from django.forms.models import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework import generics
 from rest_framework.response import Response
@@ -40,15 +42,14 @@ def create_update_university(request, pk=None):
     """
 
     def init_org_s3_keys(uni_org):
-        from content import make_org_s3_initial_directory_names, S3, AWS_BUCKET_ORG_WIKI
-        org_id = uni_org.pk
-        org_name = uni_org.university_name
-        initial_dict = make_org_s3_initial_directory_names(org_name, org_id)
+        from content import make_org_s3_initial_directory_names, S3, AWS_BUCKET_ORG_WIKI, WIKI_TEMPLATE_ROOT
+        initial_dict = make_org_s3_initial_directory_names(uni_org.slug_name, uni_org.pk)
 
         s3_con = S3(AWS_BUCKET_ORG_WIKI)
-        # TODO : add initial file to s3 -- need template
+        init_file = '/'.join((WIKI_TEMPLATE_ROOT, '_init.json'))
+        # temp_init_file = open(init_file, 'r').read()
         for key_path in initial_dict.values():
-            s3_con.upload_wiki(None, key_path)
+            s3_con.upload_wiki(init_file, key_path)
 
     response_data = {}
     if request.method == 'POST' or request.method == 'PUT':
@@ -155,6 +156,20 @@ def create_update_customer_upg(request):
     return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
+@api_view(['GET', ])
+def get_customer_upg_by_university(request):
+    if request.method == 'GET':
+        response_data = list()
+        university = request.GET['university'] or None
+        if not university:
+            return Response(data=response_message(message='Invalid parameter'), status=status.HTTP_400_BAD_REQUEST)
+        university_upg = CustomerUPG.customer_upg.get_org_deserved_customer_upg(university)
+        for upg in university_upg:
+            response_data.append(model_to_dict(upg))
+        return Response(data={'result': response_data}, status=status.HTTP_200_OK)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
 # Feature Group APIs
 class FeatureGroupList(generics.ListAPIView):
     queryset = FeatureGroup.feature_groups
@@ -173,7 +188,6 @@ def create_update_feature_group(request, pk=None):
         We do not check permission since the feature group is only created by LMB internally,
         all universities should have the same visibility of all base feature groups.
     """
-    response_data = {}
     if request.method == 'POST' or request.method == 'PUT':
         if pk is None:
             form = FeatureGroupForm(request.POST)
@@ -186,7 +200,7 @@ def create_update_feature_group(request, pk=None):
             if not form.is_valid():
                 return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
             form.save()
-        return Response(data=response_data, status=status.HTTP_201_CREATED)
+        return Response(data=response_message(code=201), status=status.HTTP_201_CREATED)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
@@ -202,10 +216,14 @@ class FeatureDetail(generics.RetrieveAPIView):
     serializer_class = FeatureRetrieveSerializer
 
 
+class FeatureSlugView(generics.RetrieveAPIView):
+    queryset = Feature.features
+    serializer_class = FeatureSlugSerializer
+
+
 @api_view(['POST', 'PUT', ])
 def create_update_feature(request, pk=None):
     if request.method == 'POST' or request.method == 'PUT':
-        response_data = {}
         if pk is None:
             form = FeatureForm(request.POST)
             if not form.is_valid():
@@ -217,7 +235,7 @@ def create_update_feature(request, pk=None):
             if not form.is_valid():
                 return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
             form.save()
-        return Response(data=response_data, status=status.HTTP_201_CREATED)
+        return Response(data=response_message(code=201), status=status.HTTP_201_CREATED)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 

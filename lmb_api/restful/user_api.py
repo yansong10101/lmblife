@@ -2,7 +2,7 @@ from django.contrib.auth import logout as django_logout, login as django_login
 from core.forms import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm)
 from lmb_api.utils import (response_message, refresh_or_create_user_cache, is_authenticate_user, get_cache, Cache,
                            update_admin_permission_group, check_request_user_role, email_verification)
-from lmb_api.restful.core_api import create_customer, create_update_customer_upg
+from lmb_api.restful.core_api import create_customer, create_update_customer_upg, get_customer_upg_by_university
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -86,6 +86,11 @@ def grant_admin_permission_groups(request):
 @api_view(['POST', ])
 def apply_university_permission(request):
     return create_update_customer_upg(request)
+
+
+@api_view(['GET', ])
+def management_list_upg(request):
+    return get_customer_upg_by_university(request)
 
 
 @api_view(['GET', ])

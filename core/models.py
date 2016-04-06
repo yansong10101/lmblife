@@ -3,6 +3,7 @@ from django.core import validators
 from django.utils.translation import ugettext_lazy as _
 from core.managers import (AbstractBaseUser, UniversityManager, FeatureGroupManager, FeatureManager, PermissionManager,
                            PermissionGroupManager, OrgAdminManager, CustomerManager, CustomerUPGManager)
+from django.template.defaultfilters import slugify
 from django.shortcuts import get_object_or_404
 
 
@@ -11,6 +12,7 @@ class University(models.Model):
     university_code = models.CharField(max_length=50)
     short_name = models.CharField(max_length=50, blank=True)
     display_name = models.CharField(max_length=255, blank=True)
+    slug_name = models.SlugField(max_length=300, blank=True)
     address_1 = models.CharField(max_length=255, blank=True)
     address_2 = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=255, blank=True)
@@ -24,6 +26,10 @@ class University(models.Model):
 
     objects = models.Manager()
     universities = UniversityManager()
+
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.university_name)
+        super(University, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.university_name
@@ -62,14 +68,23 @@ class FeatureGroup(models.Model):
 class Feature(models.Model):
     feature_group = models.ForeignKey(FeatureGroup, related_name='feature_group')
     feature_name = models.CharField(max_length=150, unique=True)
+    slug_name = models.SlugField(max_length=200, blank=True)
     display_name = models.CharField(max_length=150, blank=True)
     description_wiki_key = models.CharField(max_length=255, blank=True)
-    # view_type = models.CharField(max_length=50, blank=True)
+    view_type = models.CharField(max_length=50, blank=True)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
 
     objects = models.Manager()
     features = FeatureManager()
+
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.feature_name)
+        super(Feature, self).save(*args, **kwargs)
+
+    @models.permalink
+    def get_absolute_url(self):
+        return 'api:feature-slug', (self.slug_name, self.pk)
 
     def __str__(self):
         return self.feature_name
@@ -128,6 +143,9 @@ class PermissionGroup(models.Model):
 
     permission = models.ManyToManyField(Permission, related_name='group_permission')
     group_name = models.CharField(max_length=150)
+    display_name = models.CharField(max_length=200, blank=True)
+    slug_name = models.SlugField(max_length=250, blank=True)
+    description = models.TextField(blank=True)
     is_org_admin = models.BooleanField(default=True)
     is_super_user = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -135,6 +153,10 @@ class PermissionGroup(models.Model):
 
     objects = models.Manager()
     permission_groups = PermissionGroupManager()
+
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.group_name)
+        super(PermissionGroup, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.group_name
@@ -221,7 +243,8 @@ class Customer(AbstractBaseUser):
     student_id = models.CharField(max_length=50, blank=True)
     offer_number = models.CharField(max_length=255, blank=True)
     photo_url = models.CharField(max_length=150, blank=True)
-    is_approved = models.BooleanField(default=False)  # for email verification check
+    is_approved = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False)
     approval_level = models.IntegerField(default=0)
 
     USERNAME_FIELD = 'email'
@@ -271,7 +294,7 @@ class CustomerUPG(models.Model):
     grant_level = models.IntegerField(default=0, verbose_name='grant user level')
     apply_level = models.IntegerField(default=0, verbose_name='apply user level')
     apply_from_feature = models.ForeignKey(Feature, related_name='customer_upg_feature', null=True, blank=True)
-    is_approve = models.NullBooleanField(null=True)
+    is_approved = models.NullBooleanField(null=True)
     admin_comment = models.TextField(blank=True)
     customer_comment = models.TextField(blank=True)
     created_date = models.DateTimeField(auto_now_add=True, editable=False, null=True)

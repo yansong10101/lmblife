@@ -70,9 +70,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'lmb_prod',
-        'USER': os.environ.get('RDS_USERNAME', None),
-        'PASSWORD': os.environ.get('RDS_PASSWORD', None),
-        'HOST': os.environ.get('RDS_HOSTNAME', None),
+        'USER': os.environ.get('RDS_USERNAME', 'yansong'),
+        'PASSWORD': os.environ.get('RDS_PASSWORD', 'Zys900916'),
+        'HOST': os.environ.get('RDS_HOSTNAME', 'lmblifedbqa.cyveqemq6mvr.us-west-2.rds.amazonaws.com'),
         'PORT': '3306',
     }
 }

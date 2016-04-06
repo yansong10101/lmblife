@@ -8,14 +8,14 @@ class UniversityListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = University
-        fields = ('url', 'university_name', 'university_code', )
+        fields = ('url', 'university_name', 'university_code', 'slug_name', 'display_name', )
 
 
 class UniversityRetrieveSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = University
-        fields = ('pk', 'university_name', 'university_code', )
+        fields = ('pk', 'university_name', 'university_code', 'slug_name', 'display_name', )
 
 
 # Org Admin serializer
@@ -68,7 +68,6 @@ class PermissionRetrieveSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('pk', 'feature', 'permission_name', 'permission_type', 'is_active', )
 
 
-
 # Permission Group serializers
 class PermissionGroupListSerializer(serializers.HyperlinkedModelSerializer):
     detail_url = serializers.HyperlinkedIdentityField(view_name='api:permission-group-retrieve', read_only=True)
@@ -86,7 +85,6 @@ class PermissionGroupRetrieveSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = PermissionGroup
         fields = ('pk', 'group_name', 'permission', 'is_org_admin', 'is_super_user', 'is_active', 'user_level', )
-
 
 
 # Customer University Permission Group serializer
@@ -117,29 +115,38 @@ class FeatureGroupListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = FeatureGroup
-        fields = ('pk', 'detail_url', 'feature_name', )
+        fields = ('pk', 'detail_url', 'feature_name', 'display_name', 'description', )
 
 
 class FeatureGroupRetrieveSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = FeatureGroup
-        fields = ('pk', 'feature_name', )
+        fields = ('pk', 'feature_name', 'display_name', 'description', )
 
 
 # Feature Model serializers
-class FeatureListSerializer(serializers.HyperlinkedModelSerializer):
-    detail_url = serializers.HyperlinkedIdentityField(view_name='api:feature-retrieve')
-    feature_group = serializers.HyperlinkedRelatedField(view_name='api:feature-group-retrieve', read_only=True)
-
-    class Meta:
-        model = Feature
-        fields = ('pk', 'detail_url', 'feature_group', 'feature_name', )
-
-
 class FeatureRetrieveSerializer(serializers.HyperlinkedModelSerializer):
     feature_group = serializers.HyperlinkedRelatedField(view_name='api:feature-group-retrieve', read_only=True)
 
     class Meta:
         model = Feature
-        fields = ('pk', 'feature_group', 'feature_name', )
+        fields = ('pk', 'slug_name', 'feature_group', 'feature_name', 'display_name', 'description', )
+
+
+class FeatureSlugSerializer(serializers.HyperlinkedModelSerializer):
+    feature_group = serializers.HyperlinkedRelatedField(view_name='api:feature-group-retrieve', read_only=True)
+
+    class Meta:
+        model = Feature
+        fields = ('pk', 'slug_name', 'feature_group', 'feature_name', 'display_name', 'description', )
+
+
+class FeatureListSerializer(serializers.HyperlinkedModelSerializer):
+    detail_url = serializers.HyperlinkedIdentityField(view_name='api:feature-retrieve')
+    slug_url = FeatureSlugSerializer(read_only=True)
+    feature_group = serializers.HyperlinkedRelatedField(view_name='api:feature-group-retrieve', read_only=True)
+
+    class Meta:
+        model = Feature
+        fields = ('pk', 'detail_url', 'slug_url', 'feature_group', 'feature_name', 'display_name', 'view_type', )
