@@ -9,7 +9,7 @@ admin.site.site_title = _('留美帮')
 
 
 class UniversityAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'university_name', 'university_code', )
+    list_display = ('pk', 'university_name', 'university_code', 'display_name', 'short_name', )
     ordering = ('university_name', )
 
 
@@ -56,7 +56,7 @@ class CustomerAdmin(UserAdmin):
 
 
 class PermissionGroupAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'group_name', 'is_org_admin', 'is_active', 'user_level', )
+    list_display = ('pk', 'group_name', 'display_name', 'is_org_admin', 'is_active', 'user_level', )
     filter_horizontal = ('permission', )
     ordering = ('group_name', )
 

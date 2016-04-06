@@ -14,7 +14,7 @@ class UniversityForm(forms.ModelForm):
 
     class Meta:
         model = University
-        fields = ('university_name', 'university_code', )
+        fields = ('university_name', 'university_code', 'display_name', 'short_name', )
 
 
 class CustomerCreationForm(forms.ModelForm):
@@ -67,7 +67,7 @@ class CustomerUPGForm(forms.ModelForm):
 
     class Meta:
         model = CustomerUPG
-        fields = ('customer', 'university', 'permission_group', 'is_approve', 'admin_comment', 'customer_comment',
+        fields = ('customer', 'university', 'permission_group', 'is_approved', 'admin_comment', 'customer_comment',
                   'apply_from_feature', )
 
     def validate_existing(self):
@@ -97,11 +97,11 @@ class CustomerUPGForm(forms.ModelForm):
         customer = self.cleaned_data.get('customer')
         university = self.cleaned_data.get('university')
         permission_group = self.cleaned_data.get('permission_group') or None
-        is_approve = self.cleaned_data.get('is_approve')
+        is_approved = self.cleaned_data.get('is_approved')
         admin_comment = self.cleaned_data.get('admin_comment')
         customer_in_university = CustomerUPG.customer_upg.all().filter(customer=customer, university=university) or None
-        if not permission_group or not is_approve or not admin_comment:
-            raise forms.ValidationError('Required Field [permission_group, is_approve, admin_comment] !',
+        if not permission_group or not is_approved or not admin_comment:
+            raise forms.ValidationError('Required Field [permission_group, is_approved, admin_comment] !',
                                         code=FORM_ERROR_CODE_MAP[2])
         if customer_in_university is None or customer_in_university.count() > 1:
             raise forms.ValidationError('Update CustomerUPG Exception: should be unique!' + str(customer_in_university),
@@ -110,7 +110,7 @@ class CustomerUPGForm(forms.ModelForm):
             customer_upg = customer_in_university[0]
             customer_upg.permission_group = permission_group
             customer_upg.grant_level = permission_group.user_level
-            customer_upg.is_approve = is_approve
+            customer_upg.is_approved = is_approved
             customer_upg.admin_comment = admin_comment
             customer_upg.save()
             return customer_upg
@@ -216,7 +216,7 @@ class FeatureForm(forms.ModelForm):
 
     class Meta:
         model = Feature
-        fields = ['feature_group', 'feature_name', 'display_name', 'description_wiki_key', 'description', ]
+        fields = ['feature_group', 'feature_name', 'display_name', 'description_wiki_key', 'description', 'view_type', ]
 
 
 class PermissionGroupForm(forms.ModelForm):

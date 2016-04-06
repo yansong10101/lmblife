@@ -36,18 +36,20 @@ def _cache_user(user):
         response_data['email'] = response_data['username'] = user.email
         response_data['role'] = 'customer'
         response_data['is_approved'] = user.is_approved
-        response_data['email_check'] = user.is_approved
+        response_data['email_check'] = user.is_email_verified
         response_data['permission_groups'] = list()
         upg_list = CustomerUPG.customer_upg.all().filter(customer=user)
         for upg in upg_list:
-            org_feature_permissions = [dict(permision_id=permission.pk,
-                                            permission_type=permission.permission_type,
-                                            feature_id=permission.feature.pk,
-                                            feature_name=permission.feature.feature_name)
-                                       for permission in upg.permission_group.permission.all()]
+            # TODO : Required default permission ? Feature ? When apply ?
+            org_feature_permissions = list()
+            if upg.permission_group:
+                org_feature_permissions = [dict(permision_id=permission.pk,
+                                                permission_type=permission.permission_type,
+                                                feature_id=permission.feature.pk or None,
+                                                feature_name=permission.feature.feature_name or None)
+                                           for permission in upg.permission_group.permission.all()]
             response_data['permission_groups'].append(dict({'university_id': upg.university.pk,
                                                             'university_name': upg.university.university_name,
-                                                            'permission_group_id': upg.permission_group.pk,
                                                             'feature_permissions': org_feature_permissions,
                                                             'grant_level': upg.grant_level, }))
     elif isinstance(user, OrgAdmin):
@@ -62,8 +64,8 @@ def _cache_user(user):
         for group in user.permission_group.all():
             org_feature_permissions = [dict(permision_id=permission.pk,
                                             permission_type=permission.permission_type,
-                                            feature_id=permission.feature.pk,
-                                            feature_name=permission.feature.feature_name)
+                                            feature_id=permission.feature.pk or None,
+                                            feature_name=permission.feature.feature_name or None)
                                        for permission in group.permission.all()]
             response_data['permission_groups'].append(dict(permission_group_name=group.group_name,
                                                            permission_group_id=group.pk,
@@ -110,7 +112,7 @@ def email_verification(token):
         data = get_cache(token)
         customer = Customer.customers.get_auth_customer(data['email']) or None
         if customer:
-            customer.is_approved = True
+            customer.is_email_verified = True
             customer.save()
             return True
     return False

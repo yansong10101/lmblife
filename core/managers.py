@@ -120,7 +120,18 @@ class CustomerManager(BaseUserManager):
         return self.get_queryset().get_customer_by_email(email)
 
 
+class CustomerUPGQuerySet(models.QuerySet):
+
+    def get_deserved_customer_upg(self, university):
+        group = self.filter(university=university)
+        print(group)
+        return group
+
+
 class CustomerUPGManager(models.Manager):
 
-    def get_queryset(self, **kwargs):
-        return super(CustomerUPGManager, self).get_queryset().filter(**kwargs)
+    def get_queryset(self):
+        return CustomerUPGQuerySet(self.model, using=self._db)
+
+    def get_org_deserved_customer_upg(self, university):
+        return self.get_queryset().get_deserved_customer_upg(university)

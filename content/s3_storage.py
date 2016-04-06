@@ -6,10 +6,10 @@ from datetime import datetime
 import mimetypes
 
 
-def make_org_s3_initial_directory_names(university_name, university_id):
-    org_root = '{}_{}_root/'.format(university_name, university_id)
-    org_wiki_root = '{}{}_{}_wiki/'.format(org_root, university_name, university_id)
-    org_image_root = '{}{}_{}_image/'.format(org_root, university_name, university_id)
+def make_org_s3_initial_directory_names(university_slug_name, university_id):
+    org_root = '{}_{}_root/'.format(university_slug_name, university_id)
+    org_wiki_root = '{}{}_{}_wiki/'.format(org_root, university_slug_name, university_id)
+    org_image_root = '{}{}_{}_image/'.format(org_root, university_slug_name, university_id)
     return dict({'org_wiki_root': org_wiki_root, 'org_image_root': org_image_root, })
 
 

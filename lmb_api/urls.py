@@ -12,6 +12,8 @@ urlpatterns = patterns(
 
     url(r'features/$', core_api.FeatureList.as_view(), name='feature-list'),
     url(r'features/(?P<pk>[0-9]+)/$', core_api.FeatureDetail.as_view(), name='feature-retrieve'),
+    url(r'features/(?P<slug_name>[0-9a-zA-Z\-]+)/(?P<pk>[0-9]+)/$', core_api.FeatureSlugView.as_view(),
+        name='feature-slug'),
     url(r'features/create/$', core_api.create_update_feature, name='feature-creation'),
     url(r'features/update/(?P<pk>[0-9]+)/$', core_api.create_update_feature, name='feature-update'),
 
@@ -62,8 +64,10 @@ urlpatterns += patterns(
 # Org Admin Portals
 urlpatterns += patterns(
     '',
-    url(r'portal/grant-perm-group/admin/$', user_api.grant_admin_permission_groups, name='org-admin-grant-permissions'),
-    url(r'portal/grant-perm-group/customer/$', user_api.create_update_customer_upg, name='customer-upg-grant'),
+    url(r'management/grant-perm-group/admin/$', user_api.grant_admin_permission_groups,
+        name='org-admin-grant-permissions'),
+    url(r'management/grant-perm-group/customer/$', user_api.create_update_customer_upg, name='customer-upg-grant'),
+    url(r'management/perm-group-list/$', user_api.management_list_upg, name='customer-upg-list'),
 )
 
 # LMB Content APIs
