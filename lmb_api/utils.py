@@ -3,6 +3,8 @@ import os
 from content import Cache
 from core.models import OrgAdmin, Customer, CustomerUPG
 import json
+import datetime
+from django.db.models.base import ModelState
 
 
 _LMBBadRequest = u'Malformed request'
@@ -17,12 +19,23 @@ def generate_key(long_token=False):
 
 
 def to_json(obj):
-    return json.dumps(obj, default=lambda o: o.__dict__)
+    def _handler(o):
+        if isinstance(o, datetime.datetime) or isinstance(o, datetime.date):
+            return o.isoformat()
+        elif isinstance(o, ModelState):
+            return None
+        else:
+            return {key: value for key, value in o.__dict__.items() if not key.startswith('_')}
+    return json.dumps(obj, default=lambda o: _handler(o))
 
 
 def get_cache(key):
     lmb_cache = Cache()
     return lmb_cache.get(key)
+
+
+def get_cached_user(token):
+    return get_cache(token)
 
 
 def _get_user_by_username(username):
@@ -118,8 +131,13 @@ def email_verification(token):
     return False
 
 
-def check_request_user_role(token, expect):
-    user = get_cache(token)
+def check_request_user_role(source, expect):
+    """
+    :param source: dict of user cache or token string
+    :param expect: list of expects
+    :return:
+    """
+    user = source if isinstance(source, dict) else get_cache(source)
     if user and user['role'] in expect:
         return True
     return False

@@ -14,8 +14,9 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from lmb_api.utils import response_message, check_request_user_role, to_json, generate_key, set_email_verification_cache
+from lmb_api.utils import (response_message, to_json, generate_key, set_email_verification_cache)
 from message.emailer import Email, TYPE_SIGNUP
+# from django.contrib.sites.models import Site
 
 
 # University APIs
@@ -47,7 +48,6 @@ def create_update_university(request, pk=None):
 
         s3_con = S3(AWS_BUCKET_ORG_WIKI)
         init_file = '/'.join((WIKI_TEMPLATE_ROOT, '_init.json'))
-        # temp_init_file = open(init_file, 'r').read()
         for key_path in initial_dict.values():
             s3_con.upload_wiki(init_file, key_path)
 
@@ -140,18 +140,27 @@ class CustomerUPGRetrieve(generics.RetrieveAPIView):
 
 
 @api_view(['POST', ])
-def create_update_customer_upg(request):
+def create_customer_upg(request):
     response_data = dict()
     if request.method == 'POST':
         form = CustomerUPGForm(request.POST)
         if not form.is_valid():
             return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
-        if form.validate_existing() and check_request_user_role(request.POST['token'], ('admin', 'president', )):
-            response_data['result'] = form.update_customer_upg()
-        elif not form.validate_existing() and check_request_user_role(request.POST['token'], ('customer', )):
-            response_data['result'] = form.create_customer_upg()
         else:
-            return Response(data=response_message(code=401), status=status.HTTP_401_UNAUTHORIZED)
+            response_data['result'] = form.create_customer_upg()
+        return Response(data=to_json(response_data), status=status.HTTP_200_OK)
+    return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['POST', ])
+def update_customer_upg(request):
+    response_data = dict()
+    if request.method == 'POST':
+        form = CustomerUPGForm(request.POST)
+        if not form.is_valid():
+            return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
+        else:
+            response_data['result'] = form.update_customer_upg()
         return Response(data=to_json(response_data), status=status.HTTP_200_OK)
     return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
