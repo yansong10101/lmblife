@@ -291,8 +291,8 @@ class CustomerUPG(models.Model):
     university = models.ForeignKey(University, related_name='customer_upg_university')
     permission_group = models.ForeignKey(PermissionGroup, null=True, blank=True,
                                          related_name='customer_upg_permission_group')
-    grant_level = models.IntegerField(default=0, verbose_name='grant user level')
-    apply_level = models.IntegerField(default=0, verbose_name='apply user level')
+    grant_level = models.IntegerField(default=0, verbose_name='grant user level', blank=True)
+    apply_level = models.IntegerField(default=0, verbose_name='apply user level', blank=True)
     apply_from_feature = models.ForeignKey(Feature, related_name='customer_upg_feature', null=True, blank=True)
     is_approved = models.NullBooleanField(null=True)
     admin_comment = models.TextField(blank=True)

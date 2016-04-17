@@ -1,5 +1,7 @@
 from django import forms
 from core.models import University, OrgAdmin, Customer, CustomerUPG, FeatureGroup, Feature, PermissionGroup
+from lmb_api.utils import get_cached_user, check_request_user_role
+from django.shortcuts import get_object_or_404
 
 
 USER_BACKEND = 'django.contrib.auth.backends.ModelBackend'
@@ -7,6 +9,7 @@ FORM_ERROR_CODE_MAP = {
     1: 'invalid',
     2: 'missing arg',
     3: 'not match',
+    4: 'unauthorized',
 }
 
 
@@ -64,15 +67,22 @@ class OrgAdminCreateForm(forms.ModelForm):
 
 
 class CustomerUPGForm(forms.ModelForm):
+    token = forms.CharField(label='token', required=True)
+    customer = forms.CharField(required=False, label='customer')
 
     class Meta:
         model = CustomerUPG
-        fields = ('customer', 'university', 'permission_group', 'is_approved', 'admin_comment', 'customer_comment',
-                  'apply_from_feature', )
+        fields = ('university', 'permission_group', 'is_approved', 'admin_comment', 'customer_comment',
+                  'apply_from_feature', 'grant_level', 'apply_level', )
 
-    def validate_existing(self):
-        customer = self.cleaned_data.get('customer')
-        university = self.cleaned_data.get('university')
+    def get_customer(self, cached_data):
+        if check_request_user_role(cached_data, ('customer', )):
+            return get_object_or_404(Customer, pk=int(cached_data['user_id']))
+        else:
+            return get_object_or_404(Customer, email=self.cleaned_data.get('customer'))
+
+    @staticmethod
+    def validate_existing(customer, university):
         customer_in_university = CustomerUPG.customer_upg.all().filter(customer=customer, university=university) or None
         if customer_in_university and customer_in_university.count() > 1:
             raise forms.ValidationError('Create CustomerUPG Exception: should be unique!' + str(customer_in_university),
@@ -82,26 +92,33 @@ class CustomerUPGForm(forms.ModelForm):
         return False
 
     def create_customer_upg(self):
-        customer = self.cleaned_data.get('customer')
+        cached_data = get_cached_user(self.cleaned_data.get('token'))
+        customer = self.get_customer(cached_data)
         university = self.cleaned_data.get('university')
-        if self.validate_existing():
+        if self.validate_existing(customer, university):
             raise forms.ValidationError('Already exist !', code=FORM_ERROR_CODE_MAP[1])
         customer_comment = self.cleaned_data.get('customer_comment')
         feature = self.cleaned_data.get('apply_from_feature')
+        apply_level = self.cleaned_data.get('apply_level')
         customer_upg = CustomerUPG(customer=customer, university=university, customer_comment=customer_comment,
-                                   apply_from_feature=feature)
+                                   apply_from_feature=feature, apply_level=apply_level)
         customer_upg.save()
         return customer_upg
 
     def update_customer_upg(self):
-        customer = self.cleaned_data.get('customer')
+        cached_data = get_cached_user(self.cleaned_data.get('token'))
+        customer = self.get_customer(cached_data)
         university = self.cleaned_data.get('university')
-        permission_group = self.cleaned_data.get('permission_group') or None
+        if cached_data['university_id'] != university.pk:
+            raise forms.ValidationError('User has no permission !', code=FORM_ERROR_CODE_MAP[4])
+        permission_group = self.cleaned_data.get('permission_group')
         is_approved = self.cleaned_data.get('is_approved')
         admin_comment = self.cleaned_data.get('admin_comment')
-        customer_in_university = CustomerUPG.customer_upg.all().filter(customer=customer, university=university) or None
-        if not permission_group or not is_approved or not admin_comment:
-            raise forms.ValidationError('Required Field [permission_group, is_approved, admin_comment] !',
+        grant_level = self.cleaned_data.get('grant_level') or None
+        customer_in_university = CustomerUPG.customer_upg.all().filter(customer=customer.pk,
+                                                                       university=university) or None
+        if not permission_group or not is_approved or not admin_comment or not customer:
+            raise forms.ValidationError('Required Field [customer, permission_group, is_approved, admin_comment, ] !',
                                         code=FORM_ERROR_CODE_MAP[2])
         if customer_in_university is None or customer_in_university.count() > 1:
             raise forms.ValidationError('Update CustomerUPG Exception: should be unique!' + str(customer_in_university),
@@ -109,7 +126,7 @@ class CustomerUPGForm(forms.ModelForm):
         elif customer_in_university.count() == 1:
             customer_upg = customer_in_university[0]
             customer_upg.permission_group = permission_group
-            customer_upg.grant_level = permission_group.user_level
+            customer_upg.grant_level = grant_level or permission_group.user_level
             customer_upg.is_approved = is_approved
             customer_upg.admin_comment = admin_comment
             customer_upg.save()
