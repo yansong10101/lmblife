@@ -8,11 +8,10 @@ from django.shortcuts import get_object_or_404
 
 
 class University(models.Model):
-    university_name = models.CharField(max_length=255)
+    handle = models.CharField(max_length=255, unique=True)
+    slug_name = models.SlugField(max_length=255, unique=True)
+    display_name = models.CharField(max_length=500, blank=True)
     university_code = models.CharField(max_length=50)
-    short_name = models.CharField(max_length=50, blank=True)
-    display_name = models.CharField(max_length=255, blank=True)
-    slug_name = models.SlugField(max_length=300, blank=True)
     address_1 = models.CharField(max_length=255, blank=True)
     address_2 = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=255, blank=True)
@@ -28,11 +27,11 @@ class University(models.Model):
     universities = UniversityManager()
 
     def save(self, *args, **kwargs):
-        self.slug_name = slugify(self.university_name)
+        self.slug_name = slugify(self.handle)
         super(University, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.university_name
+        return self.handle
 
     def __unicode__(self):
         return self.__str__()
@@ -44,6 +43,22 @@ class University(models.Model):
     def create(cls, **kwargs):
         university = cls.universities.create(**kwargs)
         return university
+
+
+class UniversityAdditionalAttributes(models.Model):
+    university = models.ForeignKey(University, related_name='university')
+    attribute_name = models.CharField(max_length=255)
+    attribute_value = models.CharField(max_length=255, blank=True)
+    attribute_long_value = models.TextField(blank=True)
+
+    def __str__(self):
+        return '{}, {}, {}, {}'.format(self.university.handle,
+                                       self.attribute_name,
+                                       self.attribute_value,
+                                       self.attribute_long_value)
+
+    def __unicode__(self):
+        return self.__str__()
 
 
 class FeatureGroup(models.Model):

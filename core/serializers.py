@@ -8,14 +8,14 @@ class UniversityListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = University
-        fields = ('url', 'university_name', 'university_code', 'slug_name', 'display_name', )
+        fields = ('url', 'handle', 'university_code', 'slug_name', 'display_name', )
 
 
 class UniversityRetrieveSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = University
-        fields = ('pk', 'university_name', 'university_code', 'slug_name', 'display_name', )
+        fields = ('pk', 'handle', 'university_code', 'slug_name', 'display_name', )
 
 
 # Org Admin serializer

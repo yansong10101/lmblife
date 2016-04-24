@@ -62,7 +62,9 @@ def _cache_user(user):
                                                 feature_name=permission.feature.feature_name or None)
                                            for permission in upg.permission_group.permission.all()]
             response_data['permission_groups'].append(dict({'university_id': upg.university.pk,
-                                                            'university_name': upg.university.university_name,
+                                                            'university_handle': upg.university.handle,
+                                                            'university_slug': upg.university.slug_name,
+                                                            'handle': upg.university.handle,
                                                             'feature_permissions': org_feature_permissions,
                                                             'grant_level': upg.grant_level, }))
     elif isinstance(user, OrgAdmin):
@@ -70,7 +72,9 @@ def _cache_user(user):
         response_data['username'] = user.username
         response_data['role'] = 'admin'
         response_data['university_id'] = user.university.pk
-        response_data['university_name'] = user.university.university_name
+        response_data['university_handle'] = user.university.handle
+        response_data['university_slug'] = user.university.slug_name
+        response_data['handle'] = user.university.handle
         response_data['permission_groups'] = list()
         if user.is_president:
             response_data['role'] = 'president'

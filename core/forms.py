@@ -1,5 +1,6 @@
 from django import forms
-from core.models import University, OrgAdmin, Customer, CustomerUPG, FeatureGroup, Feature, PermissionGroup
+from core.models import (University, OrgAdmin, Customer, CustomerUPG, FeatureGroup, Feature, PermissionGroup,
+                         UniversityAdditionalAttributes)
 from lmb_api.utils import get_cached_user, check_request_user_role
 from django.shortcuts import get_object_or_404
 
@@ -17,7 +18,41 @@ class UniversityForm(forms.ModelForm):
 
     class Meta:
         model = University
-        fields = ('university_name', 'university_code', 'display_name', 'short_name', )
+        fields = ('handle', 'university_code', 'display_name', )
+
+
+class UniversityAdditionalAttributesForm(forms.ModelForm):
+    token = forms.CharField(label='token', required=False)
+
+    class Meta:
+        model = UniversityAdditionalAttributes
+        fields = ('university', 'attribute_name', 'attribute_value', 'attribute_long_value', )
+
+    def validate_permission(self):
+        cached_data = get_cached_user(self.cleaned_data.get('token'))
+        university = self.cleaned_data.get('university')
+        if cached_data['university_id'] != university.pk or not check_request_user_role(cached_data,
+                                                                                        ['president', 'admin']):
+            raise forms.ValidationError('User has no permission !', code=FORM_ERROR_CODE_MAP[4])
+        return True
+
+    def save(self, commit=True):
+        if self.validate_permission():
+            uni_attr = \
+                UniversityAdditionalAttributes.objects.filter(university=self.cleaned_data.get('university'),
+                                                              attribute_name=self.cleaned_data.get('attribute_name'))
+            if uni_attr.count() == 1:
+                # already exists
+                attr_obj = uni_attr[0]
+                attr_obj.attribute_name = self.cleaned_data.get('attribute_name')
+                attr_obj.attribute_value = self.cleaned_data.get('attribute_value')
+                attr_obj.attribute_long_value = self.cleaned_data.get('attribute_long_value')
+                attr_obj.save()
+            elif uni_attr.count() == 0:
+                super(UniversityAdditionalAttributesForm, self).save()
+            else:
+                raise forms.ValidationError('Duplicated University Additional Attributes Error!',
+                                            code=FORM_ERROR_CODE_MAP[1])
 
 
 class CustomerCreationForm(forms.ModelForm):
@@ -69,11 +104,12 @@ class OrgAdminCreateForm(forms.ModelForm):
 class CustomerUPGForm(forms.ModelForm):
     token = forms.CharField(label='token', required=True)
     customer = forms.CharField(required=False, label='customer')
+    university_slug = forms.CharField(label='university slug', required=True)
 
     class Meta:
         model = CustomerUPG
-        fields = ('university', 'permission_group', 'is_approved', 'admin_comment', 'customer_comment',
-                  'apply_from_feature', 'grant_level', 'apply_level', )
+        fields = ('permission_group', 'is_approved', 'admin_comment', 'customer_comment', 'apply_from_feature',
+                  'grant_level', 'apply_level', )
 
     def get_customer(self, cached_data):
         if check_request_user_role(cached_data, ('customer', )):
@@ -94,12 +130,12 @@ class CustomerUPGForm(forms.ModelForm):
     def create_customer_upg(self):
         cached_data = get_cached_user(self.cleaned_data.get('token'))
         customer = self.get_customer(cached_data)
-        university = self.cleaned_data.get('university')
+        university = get_object_or_404(University, slug_name=self.cleaned_data.get('university_slug'))
         if self.validate_existing(customer, university):
             raise forms.ValidationError('Already exist !', code=FORM_ERROR_CODE_MAP[1])
         customer_comment = self.cleaned_data.get('customer_comment')
         feature = self.cleaned_data.get('apply_from_feature')
-        apply_level = self.cleaned_data.get('apply_level')
+        apply_level = self.cleaned_data.get('apply_level') or 0
         customer_upg = CustomerUPG(customer=customer, university=university, customer_comment=customer_comment,
                                    apply_from_feature=feature, apply_level=apply_level)
         customer_upg.save()
@@ -108,7 +144,7 @@ class CustomerUPGForm(forms.ModelForm):
     def update_customer_upg(self):
         cached_data = get_cached_user(self.cleaned_data.get('token'))
         customer = self.get_customer(cached_data)
-        university = self.cleaned_data.get('university')
+        university = get_object_or_404(University, slug_name=self.cleaned_data.get('university_slug'))
         if cached_data['university_id'] != university.pk:
             raise forms.ValidationError('User has no permission !', code=FORM_ERROR_CODE_MAP[4])
         permission_group = self.cleaned_data.get('permission_group')

@@ -1,20 +1,22 @@
-from core.models import Customer, University, OrgAdmin, CustomerUPG, FeatureGroup, Feature, Permission, PermissionGroup
+from core.models import (Customer, University, OrgAdmin, CustomerUPG, FeatureGroup, Feature, Permission,
+                         PermissionGroup, UniversityAdditionalAttributes)
 from core.serializers import (UniversityListSerializer, UniversityRetrieveSerializer,
                               OrgAdminListSerializer, OrgAdminRetrieveSerializer, CustomerListSerializer,
                               CustomerRetrieveSerializer, PermissionListSerializer, PermissionRetrieveSerializer,
                               PermissionGroupListSerializer, PermissionGroupRetrieveSerializer,
                               CustomerUPGListSerializer, CustomerUPGRetrieveSerializer, FeatureGroupListSerializer,
                               FeatureGroupRetrieveSerializer, FeatureListSerializer, FeatureRetrieveSerializer,
-                              FeatureSlugSerializer)
+                              FeatureSlugSerializer, )
 from core.forms import (UniversityForm, OrgAdminCreateForm, CustomerCreationForm, CustomerUPGForm, FeatureGroupForm,
-                        FeatureForm, PermissionGroupForm)
+                        FeatureForm, PermissionGroupForm, UniversityAdditionalAttributesForm, )
 from django.forms.models import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from lmb_api.utils import (response_message, to_json, generate_key, set_email_verification_cache)
+from lmb_api.utils import (response_message, to_json, generate_key, set_email_verification_cache, get_cached_user,
+                           check_request_user_role, )
 from message.emailer import Email, TYPE_SIGNUP
 # from django.contrib.sites.models import Site
 
@@ -23,12 +25,22 @@ from message.emailer import Email, TYPE_SIGNUP
 class UniversityList(generics.ListAPIView):
     queryset = University.universities
     serializer_class = UniversityListSerializer
-    paginate_by = 15
+    paginate_by = 30
 
 
 class UniversityRetrieve(generics.RetrieveAPIView):
     queryset = University.universities
     serializer_class = UniversityRetrieveSerializer
+
+
+@api_view(['GET', ])
+def retrieve_university_by_slug(request):
+    if request.method == 'GET':
+        slug = request.GET['university_slug']
+        university = University.objects.all().get(slug_name=slug, is_active=True)
+        response_data = dict({'result': 'success', 'data': to_json(university), })
+        return Response(data=response_data, status=status.HTTP_200_OK)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['POST', 'PUT', ])
@@ -69,6 +81,42 @@ def create_update_university(request, pk=None):
     return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
+# University Additional Attributes APIs
+@api_view(['POST'])
+def create_or_update_university_additional_attr(request):
+    if request.method == 'POST':
+        form = UniversityAdditionalAttributesForm(request.POST)
+        if not form.is_valid():
+            return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
+        form.save()
+        return Response(data=response_message(code=201), status=status.HTTP_201_CREATED)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['GET', ])
+def get_university_additional_attr_list(request):
+    if request.method == 'GET':
+        slug = request.GET['slug']
+        university = University.objects.all().get(slug_name=slug, is_active=True)
+        university_additional_attr_list = UniversityAdditionalAttributes.objects.filter(pk=university.pk)
+        response_data = dict({'result': 'success', 'data': university_additional_attr_list, })
+        return Response(data=response_data, status=status.HTTP_200_OK)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['GET', ])
+def retrieve_university_additional_attr(request):
+    if request.method == 'GET':
+        slug = request.GET['slug']
+        attribute_name = request.GET['attr_name']
+        university = University.objects.all().get(slug_name=slug, is_active=True)
+        university_additional_attr = UniversityAdditionalAttributes.objects.get(university=university.pk,
+                                                                                attribute_name=attribute_name) or ''
+        response_data = dict({'result': 'success', 'data': to_json(university_additional_attr), })
+        return Response(data=response_data, status=status.HTTP_200_OK)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
 # Org Admin APIs
 class OrgAdminList(generics.ListAPIView):
     queryset = OrgAdmin.org_admins
@@ -83,15 +131,14 @@ class OrgAdminRetrieve(generics.RetrieveAPIView):
 
 @api_view(['POST', ])
 def create_org_admin(request):
-    response_data = {}
     if request.method == 'POST':
         form = OrgAdminCreateForm(request.POST)
         if not form.is_valid():
             return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
         form.clean_password2()
         form.save()
-        return Response(data=response_data, status=status.HTTP_201_CREATED)
-    return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(data=response_message(code=201), status=status.HTTP_201_CREATED)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 # Customer APIs
@@ -108,7 +155,6 @@ class CustomerRetrieve(generics.RetrieveAPIView):
 
 @api_view(['POST', ])
 def create_customer(request):
-    response_data = {}
     if request.method == 'POST':
         form = CustomerCreationForm(request.POST)
         domain_name = request.META['HTTP_HOST']
@@ -122,9 +168,11 @@ def create_customer(request):
         # send verification email
         mail = Email([user.email, ], TYPE_SIGNUP)
         mail.send_mail_welcome({'username': user.email,
-                                'url': '"{}/{}/?token={}"'.format(domain_name, 'api/portal/email-token-verification', token)})
-        return Response(data=response_data, status=status.HTTP_201_CREATED)
-    return Response(data=response_data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                                'url': '"{}/{}/?token={}"'.format(domain_name,
+                                                                  'api/portal/email-token-verification',
+                                                                  token)})
+        return Response(data=response_message(code=201), status=status.HTTP_201_CREATED)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 # CustomerUPG APIs
@@ -169,7 +217,12 @@ def update_customer_upg(request):
 def get_customer_upg_by_university(request):
     if request.method == 'GET':
         response_data = list()
-        university = request.GET['university'] or None
+        token = request.GET['token']
+        university = get_object_or_404(University, slug_name=request.GET['university_slug']) or None
+        cached_data = get_cached_user(token)
+        if not check_request_user_role(cached_data, ['admin', 'president', ]) or int(cached_data['university_id']) != \
+                university.pk:
+            return Response(data=response_message(code=401), status=status.HTTP_401_UNAUTHORIZED)
         if not university:
             return Response(data=response_message(message='Invalid parameter'), status=status.HTTP_400_BAD_REQUEST)
         university_upg = CustomerUPG.customer_upg.get_org_deserved_customer_upg(university)
@@ -286,7 +339,6 @@ def create_update_permission_group(request, pk=None):
     :return: response with HTTP status code
     """
     if request.method == 'POST' or request.method == 'PUT':
-        response_data = {}
         permission_list = [int(i) for i in request.POST.getlist('permissions[]')]
         if pk is None:
             form = PermissionGroupForm(request.POST)
@@ -301,7 +353,7 @@ def create_update_permission_group(request, pk=None):
             form.save()
             if permission_list:
                 PermissionGroup.update(permission_group, permission_list)
-        return Response(data=response_data, status=status.HTTP_201_CREATED)
+        return Response(data=response_message(code=201), status=status.HTTP_201_CREATED)
     elif request.method == 'DELETE' and pk:
         # NOTE : de-active only for now, better to delete with all relations ?
         permission_group = get_object_or_404(PermissionGroup, pk=pk)

@@ -27,10 +27,20 @@ urlpatterns = patterns(
     url(r'permission-groups/update/(?P<pk>[0-9]+)/$', core_api.create_update_permission_group,
         name='permission-group-update'),
 
-    url(r'universities/$', core_api.UniversityList.as_view(), name='university-list'),
-    url(r'universities/(?P<pk>[0-9])+/$', core_api.UniversityRetrieve.as_view(), name='university-retrieve'),
+    url(r'universities/list/$', core_api.UniversityList.as_view(), name='university-list'),
+    url(r'universities/retrieve/(?P<pk>[0-9])+/$', core_api.UniversityRetrieve.as_view(), name='university-retrieve'),
+    url(r'universities/retrieve/$', core_api.retrieve_university_by_slug, name='university-retrieve-by-slug'),
     url(r'universities/create/$', core_api.create_update_university, name='university-creation'),
     url(r'universities/update/(?P<pk>[0-9])+/$', core_api.create_update_university, name='university-update'),
+
+    url(r'university-additional/create/$', core_api.create_or_update_university_additional_attr,
+        name='university-additional-create'),
+    url(r'university-additional/update/$', core_api.create_or_update_university_additional_attr,
+        name='university-additional-update'),
+    url(r'university-additional/list/$', core_api.get_university_additional_attr_list,
+        name='university-additional-list'),
+    url(r'university-additional/retrieve/$', core_api.retrieve_university_additional_attr,
+        name='university-additional-retrieve'),
 
     url(r'org-admins/$', core_api.OrgAdminList.as_view(), name='org-admin-list'),
     url(r'org-admins/(?P<pk>[0-9]+)/$', core_api.OrgAdminRetrieve.as_view(), name='org-admin-retrieve'),
