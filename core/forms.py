@@ -23,14 +23,15 @@ class UniversityForm(forms.ModelForm):
 
 class UniversityAdditionalAttributesForm(forms.ModelForm):
     token = forms.CharField(label='token', required=False)
+    slug = forms.CharField(label='slug', required=True)
 
     class Meta:
         model = UniversityAdditionalAttributes
-        fields = ('university', 'attribute_name', 'attribute_value', 'attribute_long_value', )
+        fields = ('attribute_name', 'attribute_value', 'attribute_long_value', )
 
     def validate_permission(self):
         cached_data = get_cached_user(self.cleaned_data.get('token'))
-        university = self.cleaned_data.get('university')
+        university = get_object_or_404(University, slug_name=self.cleaned_data.get('slug'))
         if cached_data['university_id'] != university.pk or not check_request_user_role(cached_data,
                                                                                         ['president', 'admin']):
             raise forms.ValidationError('User has no permission !', code=FORM_ERROR_CODE_MAP[4])
@@ -38,8 +39,9 @@ class UniversityAdditionalAttributesForm(forms.ModelForm):
 
     def save(self, commit=True):
         if self.validate_permission():
+            university = get_object_or_404(University, slug_name=self.cleaned_data.get('slug'))
             uni_attr = \
-                UniversityAdditionalAttributes.objects.filter(university=self.cleaned_data.get('university'),
+                UniversityAdditionalAttributes.objects.filter(university=university,
                                                               attribute_name=self.cleaned_data.get('attribute_name'))
             if uni_attr.count() == 1:
                 # already exists

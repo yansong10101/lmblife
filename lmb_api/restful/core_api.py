@@ -89,7 +89,7 @@ def create_or_update_university_additional_attr(request):
         if not form.is_valid():
             return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
         form.save()
-        return Response(data=response_message(code=201), status=status.HTTP_201_CREATED)
+        return Response(data=response_message(code=200), status=status.HTTP_200_OK)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
