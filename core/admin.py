@@ -9,8 +9,8 @@ admin.site.site_title = _('留美帮')
 
 
 class UniversityAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'university_name', 'university_code', 'display_name', 'short_name', )
-    ordering = ('university_name', )
+    list_display = ('pk', 'handle', 'university_code', 'display_name', )
+    ordering = ('handle', )
 
 
 class OrgUserAdmin(UserAdmin):
