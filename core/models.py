@@ -261,6 +261,7 @@ class Customer(AbstractBaseUser):
     is_approved = models.BooleanField(default=False)
     is_email_verified = models.BooleanField(default=False)
     approval_level = models.IntegerField(default=0)
+    # avatar_url = models.CharField(max_length=225, blank=True)
 
     USERNAME_FIELD = 'email'
 

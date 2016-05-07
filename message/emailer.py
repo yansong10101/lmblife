@@ -20,7 +20,8 @@ TYPE_LOG_EXCEPTIONS = 'log_exceptions'
 _email_spec_mapping = {
     'default': ('noreply', '[notification] notification do not reply', '', mail_model.PRIORITY_MEDIUM),
     'signup': ('noreply', '[Welcome] Welcome to join 留美帮', 'signup.html', mail_model.PRIORITY_HIGH),
-    'reset_password': ('noreply', '[Important] Your request to reset password', '', mail_model.PRIORITY_HIGH),
+    'reset_password': ('noreply', '[Important] Your request to reset password', 'forgot_password.html',
+                       mail_model.PRIORITY_HIGH),
     'log_exceptions': ('support', '[Exception] Site Exception', '', mail_model.PRIORITY_HIGH),
 }
 

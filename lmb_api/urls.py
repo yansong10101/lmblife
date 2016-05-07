@@ -62,6 +62,7 @@ urlpatterns += patterns(
     url(r'portal/user/login/$', user_api.login, name='user-login'),
     url(r'portal/user/logout/$', user_api.logout, name='user-logout'),
     url(r'portal/user/change-password/$', user_api.change_password, name='change-password'),
+    url(r'portal/user/send/forgot-password-email/$', user_api.forgot_password_email, name='send-forgot-password-email'),
     url(r'portal/user/reset-password/$', user_api.reset_password, name='reset-password'),
     url(r'portal/customer-permission/apply/$', user_api.apply_university_permission, name='customer-upg-create'),
     url(r'portal/refresh-cache/user-cache/$', user_api.refresh_user_cache, name='refresh-user-cache'),

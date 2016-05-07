@@ -1,12 +1,14 @@
 from django.contrib.auth import logout as django_logout, login as django_login
-from core.forms import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm)
-from lmb_api.utils import (response_message, refresh_or_create_user_cache, is_authenticate_user, get_cache, Cache,
-                           update_admin_permission_group, check_request_user_role, email_verification)
+from core.forms import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm,
+                        UserForgotPassword)
+from lmb_api.utils import (response_message, refresh_or_create_user_cache, Cache, update_admin_permission_group,
+                           check_request_user_role, email_verification, reset_password_cache_handler)
 from lmb_api.restful.core_api import (create_customer, update_customer_upg, create_customer_upg,
                                       get_customer_upg_by_university)
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from message.emailer import Email, TYPE_RESET_PASSWORD
 
 
 @api_view(['POST', ])
@@ -53,21 +55,33 @@ def change_password(request):
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-@api_view(['POST', 'GET', ])
+@api_view(['POST', ])
 def reset_password(request):
-    if request.method == 'GET':
-        token = request.POST['token']
-        if is_authenticate_user(token):
-            return Response(data=get_cache(token), status=status.HTTP_302_FOUND)
-        return Response(data=response_message(message='expired link'), status=status.HTTP_404_NOT_FOUND)
     if request.method == 'POST':
         form = UserResetPassword(request.POST)
         if form.is_valid():
-            user = form.reset_password()
-            if user:
-                django_login(request, user)
-                return Response(data=response_message(code=200), status=status.HTTP_200_OK)
+            form.reset_password()
+            return Response(data=response_message(code=200), status=status.HTTP_200_OK)
         return Response(data=response_message(message='Invalid password'), status=status.HTTP_400_BAD_REQUEST)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['POST', ])
+def forgot_password_email(request):
+    if request.method == 'POST':
+        form = UserForgotPassword(request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if user:
+                domain_name = request.META['HTTP_HOST']
+                token = reset_password_cache_handler(user.email)
+                mail = Email([user.email, ], TYPE_RESET_PASSWORD)
+                mail.send_mail_welcome({'username': user.email,
+                                        'url': '"{}/{}/?token={}"'.format(domain_name,
+                                                                          'api/portal/user/reset-password/',
+                                                                          token)})
+            return Response(data=response_message(code=200), status=status.HTTP_200_OK)
+        return Response(data=response_message(message='Username Does not exist !'), status=status.HTTP_400_BAD_REQUEST)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
