@@ -38,6 +38,13 @@ def get_cached_user(token):
     return get_cache(token)
 
 
+def get_cached_user_by_email(token):
+    cached_data = get_cache(token)
+    email = cached_data['email']
+    # action = cached_data['action']
+    return Customer.customers.get_auth_customer(email) or None
+
+
 def _get_user_by_username(username):
     return Customer.customers.get_auth_customer(username) or OrgAdmin.org_admins.get_auth_admin(username)
 
@@ -47,6 +54,8 @@ def _cache_user(user):
     if isinstance(user, Customer):
         response_data['user_id'] = user.pk
         response_data['email'] = response_data['username'] = user.email
+        response_data['first_name'] = user.first_name
+        response_data['last_name'] = user.last_name
         response_data['role'] = 'customer'
         response_data['is_approved'] = user.is_approved
         response_data['email_check'] = user.is_email_verified
@@ -111,10 +120,10 @@ def refresh_or_create_user_cache(token, user=None):
     return user_data
 
 
-def set_email_verification_cache(token, user_email):
+def set_email_verification_cache(token, cache_dict):
     cache = Cache()
     if token:
-        cache.set_token(token, {'email': user_email, })
+        cache.set_token(token, cache_dict)
 
 
 def is_authenticate_user(token):
@@ -133,6 +142,12 @@ def email_verification(token):
             customer.save()
             return True
     return False
+
+
+def reset_password_cache_handler(email):
+    token = generate_key(long_token=True)
+    set_email_verification_cache(token, {'email': email, 'action': 'reset_password'})
+    return token
 
 
 def check_request_user_role(source, expect):

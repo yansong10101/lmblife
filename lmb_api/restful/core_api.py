@@ -164,7 +164,7 @@ def create_customer(request):
         user = form.save()
         # generate token and cache user data
         token = generate_key(long_token=True)
-        set_email_verification_cache(token, user.email)
+        set_email_verification_cache(token, {'email': user.email, 'action': 'signup', })
         # send verification email
         mail = Email([user.email, ], TYPE_SIGNUP)
         mail.send_mail_welcome({'username': user.email,

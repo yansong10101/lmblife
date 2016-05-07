@@ -137,8 +137,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 
-EMAIL_HOST_USER = os.environ.get('QA_EMAIL', None)
-EMAIL_HOST_PASSWORD = os.environ.get('QA_EMAIL_PASSWORD', None)
+EMAIL_HOST_USER = os.environ.get('SUPPORT_EMAIL', None)
+EMAIL_HOST_PASSWORD = os.environ.get('SUPPORT_EMAIL_PASSWORD', None)
 
 # EMAIL_BACKEND = "mailer.backend.DbBackend"
 # MAILER_EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

@@ -18,7 +18,6 @@ __pycache__/
 
 # Unit test / coverage reports
 *test_case
-templates/mailer
 
 # Translations
 *.mo

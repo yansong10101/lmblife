@@ -1,7 +1,7 @@
 from django import forms
 from core.models import (University, OrgAdmin, Customer, CustomerUPG, FeatureGroup, Feature, PermissionGroup,
                          UniversityAdditionalAttributes)
-from lmb_api.utils import get_cached_user, check_request_user_role
+from lmb_api.utils import get_cached_user, check_request_user_role, get_cached_user_by_email
 from django.shortcuts import get_object_or_404
 
 
@@ -184,14 +184,28 @@ class UserAuthenticationForm(forms.Form):
         if user and user.check_password(password):
             user.backend = USER_BACKEND
             return user, token
-        return None
+        return None, None
 
 
 class UserChangePasswordForm(forms.Form):
-    username = forms.CharField(label='Username')
+    token = forms.CharField(required=True)
     old_password = forms.CharField(label='Old Password', widget=forms.PasswordInput)
     password1 = forms.CharField(label='New Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
+
+    @staticmethod
+    def get_user(cached_data):
+        if check_request_user_role(cached_data, ('customer', )):
+            return get_object_or_404(Customer, pk=int(cached_data['user_id']))
+        else:
+            return get_object_or_404(OrgAdmin, pk=int(cached_data['user_id']))
+
+    @staticmethod
+    def authenticate(user, old_password):
+        if user and user.check_password(old_password):
+            user.backend = USER_BACKEND
+            return True
+        return False
 
     def clean_password2(self):
         password1 = self.cleaned_data.get('password1')
@@ -200,19 +214,12 @@ class UserChangePasswordForm(forms.Form):
             raise forms.ValidationError('Passwords do not match !')
         return password2
 
-    def authenticate(self):
-        username = self.cleaned_data.get('username')
-        old_password = self.cleaned_data.get('old_password')
-        user = Customer.customers.get_auth_customer(username) or OrgAdmin.org_admins.get_auth_admin(username)
-        if user and user.check_password(old_password):
-            user.backend = USER_BACKEND
-            return user
-        return None
-
     def set_password(self):
-        user = self.authenticate()
+        old_password = self.cleaned_data.get('old_password')
+        cached_data = get_cached_user(self.cleaned_data.get('token'))
+        user = UserChangePasswordForm.get_user(cached_data)
         password = self.clean_password2()
-        if user and password:
+        if UserChangePasswordForm.authenticate(user, old_password) and password:
             user.set_password(password)
             user.save()
             return user
@@ -220,7 +227,7 @@ class UserChangePasswordForm(forms.Form):
 
 
 class UserResetPassword(forms.Form):
-    username = forms.CharField(label='Username')
+    token = forms.CharField(label='Token', required=True)
     password1 = forms.CharField(label='New Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
 
@@ -231,22 +238,23 @@ class UserResetPassword(forms.Form):
             raise forms.ValidationError('Passwords do not match !')
         return password2
 
-    def get_user(self):
-        username = self.cleaned_data.get('username')
-        user = Customer.customers.get_auth_customer(username) or OrgAdmin.org_admins.get_auth_admin(username)
-        if user:
-            user.backend = USER_BACKEND
-            return user
-        return None
-
     def reset_password(self):
-        user = self.get_user()
+        user = get_cached_user_by_email(self.cleaned_data.get('token'))
         password = self.clean_password2()
         if user and password:
+            user.backend = USER_BACKEND
             user.set_password(password)
             user.save()
             return user
         return None
+
+
+class UserForgotPassword(forms.Form):
+    username = forms.CharField(label='Username')
+
+    def get_user(self):
+        username = self.cleaned_data.get('username')
+        return Customer.customers.get_auth_customer(username) or None
 
 
 class GrantUserPermissionForm(forms.Form):
