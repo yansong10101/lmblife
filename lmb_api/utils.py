@@ -40,9 +40,14 @@ def get_cached_user(token):
 
 def get_cached_user_by_email(token):
     cached_data = get_cache(token)
-    email = cached_data['email']
-    # action = cached_data['action']
+    email = cached_data['email'] or None
     return Customer.customers.get_auth_customer(email) or None
+
+
+def get_cached_user_by_token(token):
+    cached_data = get_cache(token)
+    if check_request_user_role(cached_data, ('customer', )):
+        return Customer.customers.get_auth_customer(cached_data['username']) or None
 
 
 def _get_user_by_username(username):
@@ -54,6 +59,7 @@ def _cache_user(user):
     if isinstance(user, Customer):
         response_data['user_id'] = user.pk
         response_data['email'] = response_data['username'] = user.email
+        response_data['avatar'] = user.avatar_url
         response_data['first_name'] = user.first_name
         response_data['last_name'] = user.last_name
         response_data['role'] = 'customer'
