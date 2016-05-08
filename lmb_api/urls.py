@@ -67,6 +67,7 @@ urlpatterns += patterns(
     url(r'portal/customer-permission/apply/$', user_api.apply_university_permission, name='customer-upg-create'),
     url(r'portal/refresh-cache/user-cache/$', user_api.refresh_user_cache, name='refresh-user-cache'),
     url(r'portal/email-token-verification/$', user_api.email_token_verification, name='user-email-token-verification'),
+    url(r'portal/user-avatar/upload/$', user_api.upload_user_avatar, name='upload-user-avatar'),
 )
 
 # Org Admin Portals

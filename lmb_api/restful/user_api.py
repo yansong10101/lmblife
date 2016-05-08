@@ -1,6 +1,6 @@
 from django.contrib.auth import logout as django_logout, login as django_login
 from core.forms import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm,
-                        UserForgotPassword)
+                        UserForgotPassword, UserAvatarFileForm)
 from lmb_api.utils import (response_message, refresh_or_create_user_cache, Cache, update_admin_permission_group,
                            check_request_user_role, email_verification, reset_password_cache_handler)
 from lmb_api.restful.core_api import (create_customer, update_customer_upg, create_customer_upg,
@@ -9,6 +9,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from message.emailer import Email, TYPE_RESET_PASSWORD
+from lmblife.settings import AWS_BUCKET_USER_ARCHIVE
+from content import S3
 
 
 @api_view(['POST', ])
@@ -73,12 +75,10 @@ def forgot_password_email(request):
         if form.is_valid():
             user = form.get_user()
             if user:
-                domain_name = request.META['HTTP_HOST']
                 token = reset_password_cache_handler(user.email)
                 mail = Email([user.email, ], TYPE_RESET_PASSWORD)
                 mail.send_mail_welcome({'username': user.email,
-                                        'url': '"{}/{}/?token={}"'.format(domain_name,
-                                                                          'api/portal/user/reset-password/',
+                                        'url': '"{}/{}/?code={}"'.format('https://www.lmeib.com', '/user/reset',
                                                                           token)})
             return Response(data=response_message(code=200), status=status.HTTP_200_OK)
         return Response(data=response_message(message='Username Does not exist !'), status=status.HTTP_400_BAD_REQUEST)
@@ -127,4 +127,18 @@ def email_token_verification(request):
     if request.method == 'GET':
         token = request.GET['token'] or None
         return Response(data={'is_verified': email_verification(token), }, status=status.HTTP_200_OK)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['POST', ])
+def upload_user_avatar(request, ):
+    s3 = S3(AWS_BUCKET_USER_ARCHIVE)
+    if request.method == 'POST':
+        form = UserAvatarFileForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
+        key_prefix = form.make_avatar_s3_key_prefix()
+        s3_key = s3.upload_image(request.FILES['file'], key_prefix)
+        image_url = form.update_user_avatar_key(AWS_BUCKET_USER_ARCHIVE, s3_key)
+        return Response(data={'image_url': image_url}, status=status.HTTP_201_CREATED)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)

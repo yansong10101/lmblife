@@ -51,7 +51,13 @@ class UniversityAdditionalAttributesForm(forms.ModelForm):
                 attr_obj.attribute_long_value = self.cleaned_data.get('attribute_long_value')
                 attr_obj.save()
             elif uni_attr.count() == 0:
-                super(UniversityAdditionalAttributesForm, self).save()
+                uni_add_attr = UniversityAdditionalAttributes()
+                uni_add_attr.university = university
+                uni_add_attr.attribute_name = self.cleaned_data.get('attribute_name')
+                uni_add_attr.attribute_value = self.cleaned_data.get('attribute_value')
+                uni_add_attr.attribute_long_value = self.cleaned_data.get('attribute_long_value')
+                # super(UniversityAdditionalAttributesForm, self).save()
+                uni_add_attr.save()
             else:
                 raise forms.ValidationError('Duplicated University Additional Attributes Error!',
                                             code=FORM_ERROR_CODE_MAP[1])
@@ -188,7 +194,7 @@ class UserAuthenticationForm(forms.Form):
 
 
 class UserChangePasswordForm(forms.Form):
-    token = forms.CharField(required=True)
+    code = forms.CharField(required=True)
     old_password = forms.CharField(label='Old Password', widget=forms.PasswordInput)
     password1 = forms.CharField(label='New Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
@@ -216,7 +222,9 @@ class UserChangePasswordForm(forms.Form):
 
     def set_password(self):
         old_password = self.cleaned_data.get('old_password')
-        cached_data = get_cached_user(self.cleaned_data.get('token'))
+        cached_data = get_cached_user(self.cleaned_data.get('code'))
+        if not cached_data:
+            raise forms.ValidationError('Unauthorized User !')
         user = UserChangePasswordForm.get_user(cached_data)
         password = self.clean_password2()
         if UserChangePasswordForm.authenticate(user, old_password) and password:
@@ -227,7 +235,7 @@ class UserChangePasswordForm(forms.Form):
 
 
 class UserResetPassword(forms.Form):
-    token = forms.CharField(label='Token', required=True)
+    code = forms.CharField(required=True)
     password1 = forms.CharField(label='New Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
 
@@ -239,7 +247,7 @@ class UserResetPassword(forms.Form):
         return password2
 
     def reset_password(self):
-        user = get_cached_user_by_email(self.cleaned_data.get('token'))
+        user = get_cached_user_by_email(self.cleaned_data.get('code'))
         password = self.clean_password2()
         if user and password:
             user.backend = USER_BACKEND
@@ -286,3 +294,25 @@ class PermissionGroupForm(forms.ModelForm):
     class Meta:
         model = PermissionGroup
         fields = ['group_name', 'is_org_admin', 'user_level', ]
+
+
+class UserAvatarFileForm(forms.Form):
+    token = forms.CharField()
+    file = forms.FileField()
+
+    def get_user(self):
+        cached_data = get_cached_user(self.cleaned_data.get('token'))
+        user = Customer.customers.get_auth_customer(cached_data['username']) or None
+        if not cached_data or not user:
+            raise forms.ValidationError('Unauthorized User !')
+        return user
+
+    def make_avatar_s3_key_prefix(self):
+        user = self.get_user()
+        return '{}/{}/'.format(user.pk, 'avatar')
+
+    def update_user_avatar_key(self, bucket, s3_key):
+        user = self.get_user()
+        user.avatar_url = '{}/{}/{}'.format('https://s3-us-west-2.amazonaws.com', bucket, s3_key)
+        user.save()
+        return user.avatar_url
