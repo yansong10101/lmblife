@@ -32,10 +32,10 @@ class UniversityAdditionalAttributesForm(forms.ModelForm):
     def validate_permission(self):
         cached_data = get_cached_user(self.cleaned_data.get('token'))
         university = get_object_or_404(University, slug_name=self.cleaned_data.get('slug'))
-        if cached_data['university_id'] != university.pk or not check_request_user_role(cached_data,
-                                                                                        ['president', 'admin']):
-            raise forms.ValidationError('User has no permission !', code=FORM_ERROR_CODE_MAP[4])
-        return True
+        if check_request_user_role(cached_data, ['president', 'admin']) and cached_data['university_id'] == \
+                university.pk:
+            return True
+        raise forms.ValidationError('User has no permission !', code=FORM_ERROR_CODE_MAP[4])
 
     def save(self, commit=True):
         if self.validate_permission():
@@ -194,7 +194,7 @@ class UserAuthenticationForm(forms.Form):
 
 
 class UserChangePasswordForm(forms.Form):
-    code = forms.CharField(required=True)
+    token = forms.CharField(required=True)
     old_password = forms.CharField(label='Old Password', widget=forms.PasswordInput)
     password1 = forms.CharField(label='New Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
@@ -222,7 +222,7 @@ class UserChangePasswordForm(forms.Form):
 
     def set_password(self):
         old_password = self.cleaned_data.get('old_password')
-        cached_data = get_cached_user(self.cleaned_data.get('code'))
+        cached_data = get_cached_user(self.cleaned_data.get('token'))
         if not cached_data:
             raise forms.ValidationError('Unauthorized User !')
         user = UserChangePasswordForm.get_user(cached_data)
