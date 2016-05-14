@@ -5,18 +5,20 @@ from lmb_api.utils import (response_message, refresh_or_create_user_cache, Cache
                            check_request_user_role, email_verification, reset_password_cache_handler)
 from lmb_api.restful.core_api import (create_customer, update_customer_upg, create_customer_upg,
                                       get_customer_upg_by_university)
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import JSONParser
 from message.emailer import Email, TYPE_RESET_PASSWORD
 from lmblife.settings import AWS_BUCKET_USER_ARCHIVE
 from content import S3
 
 
 @api_view(['POST', ])
+@parser_classes((JSONParser,))
 def login(request):
     if request.method == 'POST':
-        form = UserAuthenticationForm(request.POST)
+        form = UserAuthenticationForm(request.data)
         if form.is_valid():
             (user, token) = form.authenticate()
             if user:
