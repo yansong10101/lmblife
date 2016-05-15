@@ -224,7 +224,7 @@ class UserChangePasswordForm(forms.Form):
         old_password = self.cleaned_data.get('old_password')
         cached_data = get_cached_user(self.cleaned_data.get('token'))
         if not cached_data:
-            raise forms.ValidationError('Unauthorized User !')
+            raise forms.ValidationError('Unauthorized User ! User may already logout, no token found !')
         user = UserChangePasswordForm.get_user(cached_data)
         password = self.clean_password2()
         if UserChangePasswordForm.authenticate(user, old_password) and password:

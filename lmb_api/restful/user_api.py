@@ -31,25 +31,28 @@ def login(request):
 
 
 @api_view(['POST', ])
+@parser_classes((JSONParser,))
 def customer_signup(request):
     return create_customer(request)
 
 
 @api_view(['POST', ])
+@parser_classes((JSONParser,))
 def logout(request):
     if request.method == 'POST':
-        token = request.POST['token']
+        token = request.data['token']
         user_cache = Cache()
         user_cache.delete(token)
         django_logout(request)
-        return Response(data={}, status=status.HTTP_200_OK)
+        return Response(data=response_message(code=200), status=status.HTTP_200_OK)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['POST', ])
+@parser_classes((JSONParser,))
 def change_password(request):
     if request.method == 'POST':
-        form = UserChangePasswordForm(request.POST)
+        form = UserChangePasswordForm(request.data)
         if form.is_valid():
             user = form.set_password()
             if user:
@@ -80,8 +83,7 @@ def forgot_password_email(request):
                 token = reset_password_cache_handler(user.email)
                 mail = Email([user.email, ], TYPE_RESET_PASSWORD)
                 mail.send_mail_welcome({'username': user.email,
-                                        'url': '"{}/{}/?code={}"'.format('https://www.lmeib.com', '/user/reset',
-                                                                          token)})
+                                        'url': '"{}/{}?code={}"'.format('http://www.lmeib.com', 'user/reset', token)})
             return Response(data=response_message(code=200), status=status.HTTP_200_OK)
         return Response(data=response_message(message='Username Does not exist !'), status=status.HTTP_400_BAD_REQUEST)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
