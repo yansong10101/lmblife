@@ -129,7 +129,7 @@ def refresh_user_cache(request):
 @api_view(['GET', ])
 def email_token_verification(request):
     if request.method == 'GET':
-        token = request.GET['token'] or None
+        token = request.GET['code'] or None
         return Response(data={'is_verified': email_verification(token), }, status=status.HTTP_200_OK)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
