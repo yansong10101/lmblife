@@ -10,10 +10,11 @@ from core.serializers import (UniversityListSerializer, UniversityRetrieveSerial
 from core.forms import (UniversityForm, OrgAdminCreateForm, CustomerCreationForm, CustomerUPGForm, FeatureGroupForm,
                         FeatureForm, PermissionGroupForm, UniversityAdditionalAttributesForm, )
 from django.forms.models import model_to_dict
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import JSONParser
 from django.shortcuts import get_object_or_404
 from lmb_api.utils import (response_message, to_json, generate_key, set_email_verification_cache, get_cached_user,
                            check_request_user_role, )
@@ -154,9 +155,10 @@ class CustomerRetrieve(generics.RetrieveAPIView):
 
 
 @api_view(['POST', ])
+@parser_classes((JSONParser,))
 def create_customer(request):
     if request.method == 'POST':
-        form = CustomerCreationForm(request.POST)
+        form = CustomerCreationForm(request.data)
         domain_name = request.META['HTTP_HOST']
         if not form.is_valid():
             return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)

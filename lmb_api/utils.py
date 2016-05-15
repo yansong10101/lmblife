@@ -40,6 +40,8 @@ def get_cached_user(token):
 
 def get_cached_user_by_email(token):
     cached_data = get_cache(token)
+    if not cached_data:
+        return None
     email = cached_data['email'] or None
     return Customer.customers.get_auth_customer(email) or None
 
