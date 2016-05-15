@@ -56,7 +56,6 @@ class UniversityAdditionalAttributesForm(forms.ModelForm):
                 uni_add_attr.attribute_name = self.cleaned_data.get('attribute_name')
                 uni_add_attr.attribute_value = self.cleaned_data.get('attribute_value')
                 uni_add_attr.attribute_long_value = self.cleaned_data.get('attribute_long_value')
-                # super(UniversityAdditionalAttributesForm, self).save()
                 uni_add_attr.save()
             else:
                 raise forms.ValidationError('Duplicated University Additional Attributes Error!',

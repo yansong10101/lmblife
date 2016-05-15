@@ -159,7 +159,7 @@ class CustomerRetrieve(generics.RetrieveAPIView):
 def create_customer(request):
     if request.method == 'POST':
         form = CustomerCreationForm(request.data)
-        domain_name = request.META['HTTP_HOST']
+        # domain_name = request.META['HTTP_HOST']
         if not form.is_valid():
             return Response(data=form.errors.as_data(), status=status.HTTP_400_BAD_REQUEST)
         form.clean_password2()
@@ -170,9 +170,7 @@ def create_customer(request):
         # send verification email
         mail = Email([user.email, ], TYPE_SIGNUP)
         mail.send_mail_welcome({'username': user.email,
-                                'url': '"{}/{}/?token={}"'.format(domain_name,
-                                                                  'api/portal/email-token-verification',
-                                                                  token)})
+                                'url': '"{}/{}?code={}"'.format('http://www.lmeib.com', 'user/email_confirm', token)})
         return Response(data=response_message(code=201), status=status.HTTP_201_CREATED)
     return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
