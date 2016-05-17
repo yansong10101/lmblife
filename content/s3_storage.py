@@ -113,7 +113,8 @@ class S3Storage:
             new_key.set_contents_from_file(file)
 
     def upload_image(self, file, key_prefix):
-        # fixme : check key_prefix end with '/'
+        # check key_prefix end with '/', add if not
+        key_prefix = '{}/'.format(key_prefix) if not key_prefix[-1] == '/' else key_prefix
         filename = str(file)
         content_type = mimetypes.guess_type(filename)[0]
         # check if file is image

@@ -1,9 +1,11 @@
-from django.conf.urls import url, patterns
+from django.conf.urls import url, patterns, include
 from lmb_api.restful import core_api, s3_api, user_api, weipost_api
 
 # LMB Core APIs
 urlpatterns = patterns(
     '',
+    url(r'^api-docs/', include('rest_framework_swagger.urls')),
+
     url(r'feature-groups/$', core_api.FeatureGroupList.as_view(), name='feature-group-list'),
     url(r'feature-groups/(?P<pk>[0-9]+)/$', core_api.FeatureGroupDetail.as_view(), name='feature-group-retrieve'),
     url(r'feature-groups/create/$', core_api.create_update_feature_group, name='feature-group-creation'),

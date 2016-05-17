@@ -19,7 +19,6 @@ from django.shortcuts import get_object_or_404
 from lmb_api.utils import (response_message, to_json, generate_key, set_email_verification_cache, get_cached_user,
                            check_request_user_role, )
 from message.emailer import Email, TYPE_SIGNUP
-# from django.contrib.sites.models import Site
 
 
 # University APIs
