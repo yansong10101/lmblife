@@ -61,6 +61,7 @@ urlpatterns = patterns(
 urlpatterns += patterns(
     '',
     url(r'portal/customer/signup/$', user_api.customer_signup, name='customer-signup'),
+    url(r'portal/resend-email-confirmation/$', user_api.resend_email_confirmation, name='resend-email-confirmation'),
     url(r'portal/user/login/$', user_api.login, name='user-login'),
     url(r'portal/user/logout/$', user_api.logout, name='user-logout'),
     url(r'portal/user/change-password/$', user_api.change_password, name='change-password'),
@@ -97,8 +98,10 @@ urlpatterns += patterns(
     '',
     url(r'content/wei-post/list-post/$', weipost_api.JieJiPostList.as_view(), name='jie-ji-post-list'),
     url(r'content/wei-post/(?P<pk>[0-9]+)/get/$', weipost_api.JieJiPostRetrieve.as_view(), name='jie-ji-post-get'),
+    url(r'content/wei-post/create/$', weipost_api.create_post, name='jie-ji-post-create'),
 
     url(r'content/wei-comment/list-comment/$', weipost_api.JieJiCommentList.as_view(), name='jie-ji-comment-list'),
     url(r'content/wei-comment/(?P<pk>[0-9]+)/get/$', weipost_api.JieJiCommentRetrieve.as_view(),
         name='jie-ji-comment-get'),
+    url(r'content/wei-comment/create/$', weipost_api.create_comment, name='jie-ji-comment-create'),
 )
