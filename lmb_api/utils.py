@@ -52,6 +52,13 @@ def get_cached_user_by_token(token):
         return Customer.customers.get_auth_customer(cached_data['username']) or None
 
 
+def get_cached_customer_or_admin_by_token(token):
+    cached_data = get_cache(token)
+    if check_request_user_role(cached_data, ('customer', )):
+        return Customer.customers.get_auth_customer(cached_data['username']) or None
+    return OrgAdmin.org_admins.get_auth_admin(cached_data['username']) or None
+
+
 def _get_user_by_username(username):
     return Customer.customers.get_auth_customer(username) or OrgAdmin.org_admins.get_auth_admin(username)
 

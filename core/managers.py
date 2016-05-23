@@ -2,10 +2,25 @@ from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.db import models
 
 
+class UniversityQueryset(models.QuerySet):
+
+    def get_by_slug(self, slug):
+        result_set = self.filter(slug_name=slug)
+        if len(result_set) == 1:
+            return result_set[0]
+        return None
+
+
 class UniversityManager(models.Manager):
 
-    def get_queryset(self, is_active=True):
-        return super(UniversityManager, self).get_queryset().filter(is_active=is_active)
+    def get_queryset(self):
+        return UniversityQueryset(self.model, using=self._db).filter(is_active=True)
+
+    # def get_queryset(self, is_active=True):
+    #     return super(UniversityManager, self).get_queryset().filter(is_active=is_active)
+
+    def get_by_slug(self, slug):
+        return self.get_queryset().get_by_slug(slug)
 
 
 class FeatureGroupManager(models.Manager):

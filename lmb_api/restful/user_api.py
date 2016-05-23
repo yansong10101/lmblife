@@ -2,14 +2,15 @@ from django.contrib.auth import logout as django_logout, login as django_login
 from core.forms import (UserAuthenticationForm, UserChangePasswordForm, UserResetPassword, GrantUserPermissionForm,
                         UserForgotPassword, UserAvatarFileForm)
 from lmb_api.utils import (response_message, refresh_or_create_user_cache, Cache, update_admin_permission_group,
-                           check_request_user_role, email_verification, reset_password_cache_handler)
+                           check_request_user_role, email_verification, reset_password_cache_handler, generate_key,
+                           set_email_verification_cache, get_cached_user_by_token)
 from lmb_api.restful.core_api import (create_customer, update_customer_upg, create_customer_upg,
                                       get_customer_upg_by_university)
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import JSONParser
-from message.emailer import Email, TYPE_RESET_PASSWORD
+from message.emailer import Email, TYPE_RESET_PASSWORD, TYPE_SIGNUP
 from lmblife.settings import AWS_BUCKET_USER_ARCHIVE
 from content import S3
 
@@ -34,6 +35,28 @@ def login(request):
 @parser_classes((JSONParser,))
 def customer_signup(request):
     return create_customer(request)
+
+
+@api_view(['POST', ])
+@parser_classes((JSONParser, ))
+def resend_email_confirmation(request):
+    if request.method == 'POST':
+        token = request.data['token'] or None
+        if token:
+            user = get_cached_user_by_token(token)
+            if not user:
+                return Response(data=response_message(message='Username NOT EXISTS !'),
+                                status=status.HTTP_400_BAD_REQUEST)
+            token = generate_key(long_token=True)
+            set_email_verification_cache(token, {'email': user.email, 'action': 'signup', })
+            # send verification email
+            mail = Email([user.email, ], TYPE_SIGNUP)
+            mail.send_mail_welcome({'username': user.email, 'url': '"{}/{}?code={}"'.format('http://www.lmeib.com',
+                                                                                            'user/email_confirm',
+                                                                                            token)})
+            return Response(data=response_message(code=200), status=status.HTTP_200_OK)
+        return Response(data=response_message(message='Invalid username'), status=status.HTTP_400_BAD_REQUEST)
+    return Response(data=response_message(code=405), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['POST', ])
