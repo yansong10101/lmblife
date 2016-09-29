@@ -14,7 +14,7 @@ class UniversityQueryset(models.QuerySet):
 class UniversityManager(models.Manager):
 
     def get_queryset(self):
-        return UniversityQueryset(self.model, using=self._db).filter(is_active=True)
+        return UniversityQueryset(self.model, using=self._db)
 
     # def get_queryset(self, is_active=True):
     #     return super(UniversityManager, self).get_queryset().filter(is_active=is_active)
