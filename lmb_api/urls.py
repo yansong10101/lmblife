@@ -2,8 +2,7 @@ from django.conf.urls import url, patterns, include
 from lmb_api.restful import core_api, s3_api, user_api, weipost_api
 
 # LMB Core APIs
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
 
     url(r'feature-groups/$', core_api.FeatureGroupList.as_view(), name='feature-group-list'),
@@ -55,11 +54,10 @@ urlpatterns = patterns(
     url(r'customer-upg/$', core_api.CustomerUPGList.as_view(), name='customer-upg-list'),
     url(r'customer-upg/(?P<pk>[0-9]+)/$', core_api.CustomerUPGRetrieve.as_view(),
         name='customer-upg-retrieve'),
-)
+]
 
 # User Portals
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'portal/customer/signup/$', user_api.customer_signup, name='customer-signup'),
     url(r'portal/resend-email-confirmation/$', user_api.resend_email_confirmation, name='resend-email-confirmation'),
     url(r'portal/user/login/$', user_api.login, name='user-login'),
@@ -71,31 +69,28 @@ urlpatterns += patterns(
     url(r'portal/refresh-cache/user-cache/$', user_api.refresh_user_cache, name='refresh-user-cache'),
     url(r'portal/email-token-verification/$', user_api.email_token_verification, name='user-email-token-verification'),
     url(r'portal/user-avatar/upload/$', user_api.upload_user_avatar, name='upload-user-avatar'),
-)
+]
 
 # Org Admin Portals
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'management/grant-perm-group/admin/$', user_api.grant_admin_permission_groups,
         name='org-admin-grant-permissions'),
     url(r'management/grant-perm-group/customer/$', user_api.grant_university_permission, name='customer-upg-grant'),
     url(r'management/perm-group-list/$', user_api.management_list_upg, name='customer-upg-list'),
-)
+]
 
 # LMB Content APIs
 #
 # Wiki APIs
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'portal/image/upload/$', s3_api.upload_image, name='image-upload'),
     url(r'portal/wiki/upload/$', s3_api.upload_wiki, name='wiki-upload'),
     url(r'portal/keys/get/$', s3_api.get_items, name='get-keys'),
     url(r'portal/keys/delete/$', s3_api.delete_wiki, name='delete-keys'),
-)
+]
 
 # WeiPost APIs
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'content/wei-post/list-post/$', weipost_api.JieJiPostList.as_view(), name='jie-ji-post-list'),
     url(r'content/wei-post/(?P<pk>[0-9]+)/get/$', weipost_api.JieJiPostRetrieve.as_view(), name='jie-ji-post-get'),
     url(r'content/wei-post/create/$', weipost_api.create_post, name='jie-ji-post-create'),
@@ -104,4 +99,4 @@ urlpatterns += patterns(
     url(r'content/wei-comment/(?P<pk>[0-9]+)/get/$', weipost_api.JieJiCommentRetrieve.as_view(),
         name='jie-ji-comment-get'),
     url(r'content/wei-comment/create/$', weipost_api.create_comment, name='jie-ji-comment-create'),
-)
+]

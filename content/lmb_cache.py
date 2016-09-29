@@ -11,9 +11,13 @@ _USER_CACHE_EXPIRED = 60 * 60 * 24  # hard code for 1 day
 _LONG_TERM_CACHE_EXPIRED = 0  # 30 days or never
 
 
+def make_datetime_version():
+    return datetime.now().strftime('%Y-%m-%d %H:%M')
+
+
 class LMBCache:
 
-    def __set__(self, key, value, timeout, version=None):
+    def __set__(self, key, value, timeout, version=make_datetime_version()):
         try:
             cache.set(key, value, timeout=timeout, version=version)
         except ConnectionError:

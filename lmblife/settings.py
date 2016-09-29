@@ -45,6 +45,11 @@ INSTALLED_APPS = (
     'lmb_api',
     'content',
     'content.weipost',
+    'lmb_core.university',
+    'lmb_core.feature',
+    'lmb_core.customer',
+    'lmb_core.permission',
+    'lmb_core.relational',
     'mailer',
     'rest_framework_swagger',
 )
@@ -56,6 +61,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    'lmb_core.customer.middleware.TokenAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -67,13 +73,25 @@ WSGI_APPLICATION = 'lmblife.wsgi.application'
 
 
 # QA/development database setup, using AWS RDS -- mysql
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'lmb_prod',
+#         'USER': os.environ.get('RDS_USERNAME', 'yansong'),
+#         'PASSWORD': os.environ.get('RDS_PASSWORD', 'Zys900916'),
+#         'HOST': os.environ.get('RDS_HOSTNAME', 'lmblifedbqa.cyveqemq6mvr.us-west-2.rds.amazonaws.com'),
+#         'PORT': '3306',
+#     }
+# }
+
+# local test mode temporary, delete once commit
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'lmb_prod',
-        'USER': os.environ.get('RDS_USERNAME', 'yansong'),
-        'PASSWORD': os.environ.get('RDS_PASSWORD', 'Zys900916'),
-        'HOST': os.environ.get('RDS_HOSTNAME', 'lmblifedbqa.cyveqemq6mvr.us-west-2.rds.amazonaws.com'),
+        'NAME': 'lmb_qa',
+        'USER': 'root',
+        'PASSWORD': 'newpwd',
+        'HOST': 'localhost',
         'PORT': '3306',
     }
 }
